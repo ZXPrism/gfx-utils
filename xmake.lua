@@ -18,12 +18,9 @@ target("gfx-utils-core")
         add_cxxflags("/utf-8", {force = true})
     end
 
-    after_install(function (target)
-        os.cp("assets/", "bin/")
-    end)
-
     after_build(function (target)
         os.cp(target:targetfile(), "bin/")
+        os.cp("assets/", "bin/examples/")
     end)
 target_end()
 
