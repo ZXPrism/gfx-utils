@@ -10,6 +10,7 @@ target("gfx-utils-core")
     set_warnings("all", "error", "extra", "pedantic")
 
     add_includedirs("include", {public = true})
+    add_headerfiles("include/(gfx-utils-core/*.h)")
     add_files("src/**.cpp")
     add_packages("spdlog", "glm", "glad", "glfw", "imgui", "stb", {public = true})
 
