@@ -11,6 +11,7 @@ target("gfx-utils-core")
 
     add_includedirs("include", {public = true})
     add_headerfiles("include/(gfx-utils-core/*.h)")
+    add_headerfiles("include/(gfx-utils-core/interfaces/*.h)")
     add_files("src/**.cpp")
     add_packages("spdlog", "glm", "glad", "glfw", "imgui", "stb", {public = true})
 
