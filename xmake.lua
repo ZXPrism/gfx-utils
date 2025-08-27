@@ -19,16 +19,12 @@ target("gfx-utils-core")
         add_cxflags("/utf-8", {force = true})
         add_cxxflags("/utf-8", {force = true})
     end
-
-    after_build(function (target)
-        os.cp(target:targetfile(), "bin/")
-        os.cp("assets/", "bin/examples/")
-    end)
 target_end()
 
 target("example-create-window")
     set_languages("cxx20")
     set_kind("binary")
+    set_default(false)
     set_warnings("all", "error", "extra", "pedantic")
 
     add_files("examples/create_window.cpp")
