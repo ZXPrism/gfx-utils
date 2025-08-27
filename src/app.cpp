@@ -22,7 +22,7 @@ void App::init() {
 	_init_opengl();
 	_init_IMGUI();
 	_init_IMGUI_styles();
-	_init_IMGUI_fonts();
+	//_init_IMGUI_fonts();
 	_init_callbacks();
 }
 

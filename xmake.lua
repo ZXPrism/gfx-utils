@@ -24,7 +24,6 @@ target("gfx-utils-core")
 
     after_build(function (target)
         os.cp(target:targetfile(), "bin/")
-        os.cp("assets/", "bin/examples/")
     end)
 target_end()
 
