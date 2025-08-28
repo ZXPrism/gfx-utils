@@ -87,9 +87,9 @@ void RenderPass::use(bool depth_test, const std::function<void()> &callback) con
 			glDisable(GL_DEPTH_TEST);
 			glClear(GL_COLOR_BUFFER_BIT);
 		}
-
 	} else {
 		if (_DepthAttachment.has_value()) {
+			glEnable(GL_DEPTH_TEST);
 			glClear(GL_DEPTH_BUFFER_BIT);
 		}
 
