@@ -16,8 +16,7 @@ int main() {
 	auto default_pass = RenderPass::RenderPassBuilder("default_pass").build();
 
 	app.run([&](float dt [[maybe_unused]]) {
-		default_pass.use([&]() {
-			app.set_flag_depth_test(false);
+		default_pass.use(false, [&]() {
 		});
 	});
 

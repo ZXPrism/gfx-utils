@@ -91,18 +91,14 @@ int main() {
 		}
 		ImGui::End();
 
-		color_pass.use([&]() {
-			app.set_flag_depth_test(false);
-
+		color_pass.use(false, [&]() {
 			quad_vertex_buffer.use();
 			color_pass_shader_program.use();
 
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		});
 
-		default_pass.use([&]() {
-			app.set_flag_depth_test(false);
-
+		default_pass.use(false, [&]() {
 			quad_vertex_buffer.use();
 			default_pass_shader_program.use();
 			default_pass_shader_program.set_uniform("color_r_sampler", 0);
