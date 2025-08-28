@@ -4,6 +4,8 @@
 #include <gfx-utils-core/interfaces/singleton.h>
 
 #include <functional>
+#include <string>
+#include <utility>
 
 #include <glm/glm.hpp>
 
@@ -21,8 +23,9 @@ class App : public Singleton<App> {
 private:
 	GLFWwindow *_Window;
 
-	int _WindowWidth = config::initial_window_width;
-	int _WindowHeight = config::initial_window_height;
+	std::string _WindowTitle;
+	int _WindowWidth;
+	int _WindowHeight;
 
 	std::vector<OnCursorPosFunc> _OnCursorPosVec;
 	std::vector<OnKeyFunc> _OnKeyVec;
@@ -31,7 +34,7 @@ private:
 	std::vector<OnWindowSizeFunc> _OnWindowSizeVec;
 
 public:
-	void init();
+	void init(const std::string &title, int width, int height);
 	void run(const std::function<void(float delta_time)> &callback);
 	void shutdown();
 
@@ -39,6 +42,7 @@ public:
 	void set_flag_depth_test(bool flag) const;
 	void set_clear_color(const glm::vec3 &clear_color) const;
 
+	std::pair<int, int> get_window_size() const;
 	float get_aspect_ratio() const;
 	bool check_key_pressed(int key) const;
 
@@ -55,7 +59,7 @@ public:
 	void on_window_size(int width, int height);
 
 private:
-	void _init_window();
+	void _init_window(const std::string &title, int width, int height);
 	void _init_opengl();
 	void _init_IMGUI();
 	void _init_IMGUI_styles();

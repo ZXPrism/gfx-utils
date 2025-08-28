@@ -15,10 +15,10 @@
 
 namespace gfxutils {
 
-void App::init() {
+void App::init(const std::string &title, int width, int height) {
 	g_logger->info("App: initializing app...");
 
-	_init_window();
+	_init_window(title, width, height);
 	_init_opengl();
 	_init_IMGUI();
 	_init_IMGUI_styles();
@@ -69,7 +69,7 @@ void App::run(const std::function<void(float)> &callback) {
 			delta_time_cnt = 0.0f;
 
 			fps_smooth = static_cast<int>(fps_smooth * config::fps_lerp_coeff + 1.0f / delta_time * (1 - config::fps_lerp_coeff));
-			glfwSetWindowTitle(_Window, std::format("{} - fps: {}", config::window_title, fps_smooth).c_str());
+			glfwSetWindowTitle(_Window, std::format("{} - fps: {}", _WindowTitle, fps_smooth).c_str());
 		}
 	}
 }
@@ -95,6 +95,10 @@ void App::set_flag_depth_test(bool flag) const {
 
 void App::set_clear_color(const glm::vec3 &clear_color) const {
 	glClearColor(clear_color.r, clear_color.g, clear_color.b, 1.0f);
+}
+
+std::pair<int, int> App::get_window_size() const {
+	return { _WindowWidth, _WindowHeight };
 }
 
 float App::get_aspect_ratio() const {
@@ -167,7 +171,11 @@ void App::_init_callbacks() {
 	});
 }
 
-void App::_init_window() {
+void App::_init_window(const std::string &title, int width, int height) {
+	_WindowTitle = title;
+	_WindowWidth = width;
+	_WindowHeight = height;
+
 	glfwInit();
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, config::opengl_ver_major);
@@ -175,7 +183,7 @@ void App::_init_window() {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_SAMPLES, 4);
 
-	_Window = glfwCreateWindow(_WindowWidth, _WindowHeight, config::window_title, nullptr, nullptr);
+	_Window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
 	if (!_Window) {
 		g_logger->error("App: failed to create window");
 		return;

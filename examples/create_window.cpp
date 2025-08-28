@@ -7,7 +7,7 @@ int main() {
 	using namespace gfxutils;
 
 	auto &app = App::instance();
-	app.init();
+	app.init("gfx-utils example: Create Window", 800, 600);
 	app.set_flag_vsync(true);
 	app.set_clear_color({ 0.341f, 0.808f, 0.980f });
 
