@@ -85,16 +85,6 @@ void App::set_flag_vsync(bool flag) const {
 	glfwSwapInterval(flag ? 1 : 0);
 }
 
-void App::set_flag_depth_test(bool flag) const {
-	if (flag) {
-		glEnable(GL_DEPTH_TEST);
-		glDepthMask(GL_TRUE);
-	} else {
-		glDisable(GL_DEPTH_TEST);
-		glDepthMask(GL_FALSE);
-	}
-}
-
 void App::set_clear_color(const glm::vec3 &clear_color) const {
 	glClearColor(clear_color.r, clear_color.g, clear_color.b, 1.0f);
 }

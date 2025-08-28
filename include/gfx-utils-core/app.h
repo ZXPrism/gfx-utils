@@ -39,7 +39,6 @@ public:
 	void shutdown();
 
 	void set_flag_vsync(bool flag) const;
-	void set_flag_depth_test(bool flag) const;
 	void set_clear_color(const glm::vec3 &clear_color) const;
 
 	std::pair<int, int> get_window_size() const;

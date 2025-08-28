@@ -43,7 +43,9 @@ public:
 		RenderPass _build();
 	};
 
-	void use(const std::function<void()> &callback) const;
+	// NOTE: depth_test flag is ONLY meaningful when writing to default FBO
+	// depth attachment(if any) will always be cleared regardless of this flag
+	void use(bool depth_test, const std::function<void()> &callback) const;
 
 private:
 	RenderPass() = default;

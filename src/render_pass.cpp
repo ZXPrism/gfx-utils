@@ -76,12 +76,18 @@ RenderPass RenderPass::RenderPassBuilder::_build() {
 	return res;
 }
 
-void RenderPass::use(const std::function<void()> &callback) const {
+void RenderPass::use(bool depth_test, const std::function<void()> &callback) const {
 	glBindFramebuffer(GL_FRAMEBUFFER, *_FBO);
 
 	if (_IsDefault) {
-		// NOTE: whether the depth buffer is cleared, should be set explicitly using `App::set_flag_depth_test`
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		if (depth_test) {
+			glEnable(GL_DEPTH_TEST);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		} else {
+			glDisable(GL_DEPTH_TEST);
+			glClear(GL_COLOR_BUFFER_BIT);
+		}
+
 	} else {
 		if (_DepthAttachment.has_value()) {
 			glClear(GL_DEPTH_BUFFER_BIT);
