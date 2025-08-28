@@ -76,10 +76,6 @@ RenderPass RenderPass::RenderPassBuilder::_build() {
 	return res;
 }
 
-void RenderPass::clear(int mask) const {
-	glClear(mask);
-}
-
 void RenderPass::use(const std::function<void()> &callback) const {
 	glBindFramebuffer(GL_FRAMEBUFFER, *_FBO);
 

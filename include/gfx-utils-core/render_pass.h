@@ -43,7 +43,6 @@ public:
 		RenderPass _build();
 	};
 
-	void clear(int mask) const;
 	void use(const std::function<void()> &callback) const;
 
 private:
