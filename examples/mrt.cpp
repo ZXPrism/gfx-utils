@@ -84,7 +84,7 @@ int main() {
 
 	int color_option = 0;
 	app.run([&](float dt [[maybe_unused]]) {
-		ImGui::Begin("Temporary Window", nullptr, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::Begin("Control", nullptr, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize);
 		{
 			const char *items[] = { "R", "G", "B" };
 			ImGui::Combo("Color", &color_option, items, IM_ARRAYSIZE(items));
