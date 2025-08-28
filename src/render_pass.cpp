@@ -8,8 +8,9 @@ RenderPass::RenderPassBuilder::RenderPassBuilder(const std::string &name)
     : IBuilder(name) {
 }
 
-RenderPass::RenderPassBuilder &RenderPass::RenderPassBuilder::add_color_attachment(const Texture &texture) {
+RenderPass::RenderPassBuilder &RenderPass::RenderPassBuilder::add_color_attachment(const Texture &texture, bool clear_before_use) {
 	_ColorAttachments.push_back(texture);
+	_ColorAttachmentClearOptions.push_back(clear_before_use);
 	return *this;
 }
 

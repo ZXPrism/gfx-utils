@@ -23,12 +23,13 @@ public:
 	class RenderPassBuilder : public IBuilder<RenderPassBuilder, RenderPass> {
 	private:
 		std::vector<Texture> _ColorAttachments;
+		std::vector<bool> _ColorAttachmentClearOptions;
 		std::optional<Texture> _DepthAttachment;
 
 	public:
 		RenderPassBuilder(const std::string &name);
 
-		RenderPassBuilder &add_color_attachment(const Texture &texture);
+		RenderPassBuilder &add_color_attachment(const Texture &texture, bool clear_before_use);  // TODO: control clear colors for each attachments...
 		RenderPassBuilder &set_depth_attachment(const Texture &texture);
 
 		RenderPass _build();
