@@ -88,8 +88,10 @@ void App::set_flag_vsync(bool flag) const {
 void App::set_flag_depth_test(bool flag) const {
 	if (flag) {
 		glEnable(GL_DEPTH_TEST);
+		glDepthMask(GL_TRUE);
 	} else {
 		glDisable(GL_DEPTH_TEST);
+		glDepthMask(GL_FALSE);
 	}
 }
 

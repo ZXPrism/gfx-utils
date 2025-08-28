@@ -21,21 +21,27 @@ target("gfx-utils-core")
     end
 target_end()
 
-target("example-create-window")
-    set_languages("cxx20")
-    set_kind("binary")
-    set_default(false)
-    set_warnings("all", "error", "extra", "pedantic")
+function add_example(example_name)
+    target("example-" .. example_name)
+        set_languages("cxx20")
+        set_kind("binary")
+        set_default(false)
+        set_warnings("all", "error", "extra", "pedantic")
 
-    add_files("examples/create_window.cpp")
-    add_deps("gfx-utils-core")
+        add_files("examples/" .. example_name .. ".cpp")
+        add_deps("gfx-utils-core")
 
-    if is_plat("windows") then
-        add_cxflags("/utf-8", {force = true})
-        add_cxxflags("/utf-8", {force = true})
-    end
+        if is_plat("windows") then
+            add_cxflags("/utf-8", {force = true})
+            add_cxxflags("/utf-8", {force = true})
+        end
 
-    after_build(function (target)
-        os.cp(target:targetfile(), "bin/examples/")
-    end)
-target_end()
+        after_build(function (target)
+            os.cp(target:targetfile(), "bin/examples/")
+            os.cp("assets", "bin/examples/")
+        end)
+    target_end()
+end
+
+add_example("create_window")
+add_example("mrt")

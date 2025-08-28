@@ -1,13 +1,15 @@
 #include <gfx-utils-core/app.h>
 #include <gfx-utils-core/render_pass.h>
 
-#include <glad/glad.h>
+constexpr int WINDOW_WIDTH = 800;
+constexpr int WINDOW_HEIGHT = 600;
+constexpr const char *WINDOW_TITLE = "Example: Create Window";
 
 int main() {
 	using namespace gfxutils;
 
 	auto &app = App::instance();
-	app.init("gfx-utils example: Create Window", 800, 600);
+	app.init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
 	app.set_flag_vsync(true);
 	app.set_clear_color({ 0.341f, 0.808f, 0.980f });
 
@@ -15,7 +17,7 @@ int main() {
 
 	app.run([&](float dt [[maybe_unused]]) {
 		default_pass.use([&]() {
-			default_pass.clear(GL_COLOR_BUFFER_BIT);
+			app.set_flag_depth_test(false);
 		});
 	});
 

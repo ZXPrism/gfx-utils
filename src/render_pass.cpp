@@ -8,8 +8,10 @@ RenderPass::RenderPassBuilder::RenderPassBuilder(const std::string &name)
     : IBuilder(name) {
 }
 
-RenderPass::RenderPassBuilder &RenderPass::RenderPassBuilder::add_color_attachment(const Texture &texture) {
+RenderPass::RenderPassBuilder &RenderPass::RenderPassBuilder::add_color_attachment(const Texture &texture, bool clear_before_use, const glm::vec4 &clear_value_rgba) {
 	_ColorAttachments.push_back(texture);
+	_ColorAttachmentClearFlags.push_back(clear_before_use);
+	_ColorAttachmentClearValues.push_back(clear_value_rgba);
 	return *this;
 }
 
@@ -23,18 +25,20 @@ RenderPass RenderPass::RenderPassBuilder::_build() {
 
 	size_t n_color_attachments = _ColorAttachments.size();
 	res._ColorAttachments = _ColorAttachments;
+	res._ColorAttachmentClearFlags = _ColorAttachmentClearFlags;
+	res._ColorAttachmentClearValues = _ColorAttachmentClearValues;
 
-	bool fallback = !n_color_attachments && !_DepthAttachment.has_value();  // no attachments, fallback to default FBO
+	res._IsDefault = !n_color_attachments && !_DepthAttachment.has_value();  // no attachments, fallback to default FBO
 
 	auto fbo_raw_handle = new GLuint(0);
 	res._FBO = std::shared_ptr<GLuint>(fbo_raw_handle, [=](GLuint *ptr) {
-		if (!fallback) {  // if fallback, the delete is handled by the window system, no need to manually delete it
+		if (!res._IsDefault) {  // if fallback, the delete is handled by the window system, no need to manually delete it
 			glDeleteFramebuffers(1, ptr);
 		}
 		delete ptr;
 	});
 
-	if (fallback) {
+	if (res._IsDefault) {
 		return res;
 	}
 
@@ -52,8 +56,8 @@ RenderPass RenderPass::RenderPassBuilder::_build() {
 	}
 
 	if (_DepthAttachment.has_value()) {
-		res._DepthAttachment = _DepthAttachment.value();
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, res._DepthAttachment._get_handle(), 0);
+		res._DepthAttachment = _DepthAttachment;
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, res._DepthAttachment->_get_handle(), 0);
 	}
 
 	glDrawBuffers(static_cast<GLsizei>(n_color_attachments), attachments.data());
@@ -78,6 +82,23 @@ void RenderPass::clear(int mask) const {
 
 void RenderPass::use(const std::function<void()> &callback) const {
 	glBindFramebuffer(GL_FRAMEBUFFER, *_FBO);
+
+	if (_IsDefault) {
+		// NOTE: whether the depth buffer is cleared, should be set explicitly using `App::set_flag_depth_test`
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	} else {
+		if (_DepthAttachment.has_value()) {
+			glClear(GL_DEPTH_BUFFER_BIT);
+		}
+
+		size_t n_color_attachments = _ColorAttachments.size();
+		for (size_t i = 0; i < n_color_attachments; i++) {
+			if (_ColorAttachmentClearFlags[i]) {
+				glClearBufferfv(GL_COLOR, static_cast<GLint>(i), &_ColorAttachmentClearValues[i].r);
+			}
+		}
+	}
+
 	callback();
 }
 
