@@ -5,8 +5,8 @@
 #include <gfx-utils-core/vertex_buffer.h>
 #include <gfx-utils-core/vertices.h>
 
-constexpr int WINDOW_WIDTH = 800;
-constexpr int WINDOW_HEIGHT = 600;
+constexpr int WINDOW_WIDTH = 960;
+constexpr int WINDOW_HEIGHT = 960;
 constexpr const char *WINDOW_TITLE = "Example: Compute";
 
 int main() {
@@ -28,6 +28,9 @@ int main() {
 		compute_shader_program_builder.add_shader(compute_shader);
 	}
 	auto compute_shader_program = compute_shader_program_builder.build();
+	compute_shader_program.use();
+	compute_shader_program.set_uniform("window_width", WINDOW_WIDTH);
+	compute_shader_program.set_uniform("window_height", WINDOW_HEIGHT);
 
 	ShaderProgram::ShaderProgramBuilder default_pass_shader_program_builder("default_pass_shader_program");
 	{
@@ -46,6 +49,8 @@ int main() {
 		default_pass_shader_program_builder.add_shader(vertex_shader).add_shader(fragment_shader);
 	}
 	auto default_pass_shader_program = default_pass_shader_program_builder.build();
+	default_pass_shader_program.use();
+	default_pass_shader_program.set_uniform("window_width", WINDOW_WIDTH);
 
 	auto default_pass = RenderPass::RenderPassBuilder("default_pass").build();
 
@@ -54,20 +59,24 @@ int main() {
 	                              .add_attribute(2)  // texture coordinates (vec2)
 	                              .build();
 	auto storage_buffer = StorageBuffer::StorageBufferBuilder("compute_input_buffer")
-	                          .set_size(123)
+	                          .set_size(WINDOW_WIDTH * WINDOW_HEIGHT * 16)
 	                          .build();
 
+	float time = 0.0f;
 	app.run([&](float dt [[maybe_unused]]) {
 		default_pass.use(false, [&]() {
 			compute_shader_program.use();
+			compute_shader_program.set_uniform("time", time * 0.5f);
 			storage_buffer.bind(0);
-			glDispatchCompute(1, 1, 1);
+			glDispatchCompute(static_cast<GLuint>(WINDOW_WIDTH >> 4), static_cast<GLuint>(WINDOW_HEIGHT >> 4), 1);
 			glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
 			default_pass_shader_program.use();
 			storage_buffer.bind(0);
 			quad_vertex_buffer.use();
 			glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			time += dt;
 		});
 	});
 
