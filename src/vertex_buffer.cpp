@@ -20,21 +20,21 @@ VertexBuffer VertexBuffer::VertexBufferBuilder::_build() const {
 	VertexBuffer res;
 
 	GLuint *raw_VAO_handle = new GLuint(0);
-	glGenVertexArrays(1, raw_VAO_handle);
 	res._VAO = std::shared_ptr<GLuint>(raw_VAO_handle, [](GLuint *ptr) {
 		glDeleteVertexArrays(1, ptr);
 		delete ptr;
 	});
+	glGenVertexArrays(1, res._VAO.get());
 	glBindVertexArray(*res._VAO);
 
 	GLuint *raw_VBO_handle = new GLuint(0);
-	glGenBuffers(1, raw_VBO_handle);
 	res._VBO = std::shared_ptr<GLuint>(raw_VBO_handle, [](GLuint *ptr) {
 		glDeleteBuffers(1, ptr);
 		delete ptr;
 	});
-	glBindBuffer(GL_ARRAY_BUFFER, *res._VBO);
 
+	glGenBuffers(1, res._VBO.get());
+	glBindBuffer(GL_ARRAY_BUFFER, *res._VBO);
 	glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(_Data.size() * sizeof(float)), _Data.data(), GL_STATIC_DRAW);
 
 	size_t n_attrs = _AttrSizes.size();
