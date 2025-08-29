@@ -6,8 +6,9 @@ StorageBuffer::StorageBufferBuilder::StorageBufferBuilder(const std::string &nam
     : IBuilder(name) {
 }
 
-void StorageBuffer::StorageBufferBuilder::set_size(size_t buffer_size_bytes) {
+StorageBuffer::StorageBufferBuilder &StorageBuffer::StorageBufferBuilder::set_size(size_t buffer_size_bytes) {
 	_BufferSizeBytes = buffer_size_bytes;
+	return *this;
 }
 
 StorageBuffer StorageBuffer::StorageBufferBuilder::_build() {

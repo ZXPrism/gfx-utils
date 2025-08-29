@@ -25,7 +25,7 @@ public:
 	public:
 		StorageBufferBuilder(const std::string &name);
 
-		void set_size(size_t buffer_size_bytes);
+		StorageBufferBuilder &set_size(size_t buffer_size_bytes);
 
 		StorageBuffer _build();
 	};

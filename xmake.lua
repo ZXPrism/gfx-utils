@@ -45,3 +45,4 @@ end
 
 add_example("create_window")
 add_example("mrt")
+add_example("compute")
