@@ -51,6 +51,7 @@ int main() {
 		                           .set_type(ShaderType::FRAGMENT_SHADER)
 		                           .set_source_from_file("assets/mrt/default.frag")
 		                           .build();
+
 		default_pass_shader_program_builder.add_shader(vertex_shader).add_shader(fragment_shader);
 	}
 	auto default_pass_shader_program = default_pass_shader_program_builder.build();

@@ -34,6 +34,7 @@ public:
 	};
 
 	void set_uniform(const std::string &name, int scalar);
+	void set_uniform(const std::string &name, float scalar);
 	void set_uniform(const std::string &name, const glm::mat4 &matrix);
 	void set_uniform(const std::string &name, const glm::vec2 &vector);
 	void set_uniform(const std::string &name, const glm::vec3 &vector);
