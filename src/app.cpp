@@ -150,16 +150,12 @@ void App::_init_callbacks() {
 	});
 
 	register_on_key_func([&](int key, int scan_code [[maybe_unused]], int action, int mods [[maybe_unused]]) {
-		static bool cursor_enable = false;
-
 		if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-			cursor_enable = !cursor_enable;
-			if (cursor_enable) {
+			_OnCursorEnabled = !_OnCursorEnabled;
+			if (_OnCursorEnabled) {
 				glfwSetInputMode(_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-				_OnCursorPosEnabled = true;
 			} else {
 				glfwSetInputMode(_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-				_OnCursorPosEnabled = false;
 			}
 		}
 	});
@@ -279,7 +275,7 @@ void App::register_on_window_size_func(OnWindowSizeFunc func) {
 }
 
 void App::on_cursor_pos(double xPos, double yPos) {
-	if (_OnCursorPosEnabled) {
+	if (!_OnCursorEnabled) {
 		for (auto &fn : _OnCursorPosVec) {
 			fn(xPos, yPos);
 		}
