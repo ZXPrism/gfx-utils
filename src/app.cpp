@@ -276,8 +276,11 @@ void App::register_on_window_size_func(OnWindowSizeFunc func) {
 
 void App::on_cursor_pos(double xPos, double yPos) {
 	if (!_OnCursorEnabled) {
-		for (auto &fn : _OnCursorPosVec) {
-			fn(xPos, yPos);
+		// we must skip the first callback which is for imgui or the ui won't response!
+		// POTENTIAL ISSUE: if imgui is disabled...
+		size_t n_cursor_pos_callback = _OnCursorPosVec.size();
+		for (size_t i = 1; i < n_cursor_pos_callback; i++) {
+			_OnCursorPosVec[i](xPos, yPos);
 		}
 	}
 }
