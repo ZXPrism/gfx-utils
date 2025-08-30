@@ -27,6 +27,8 @@ private:
 	int _WindowWidth;
 	int _WindowHeight;
 
+	bool _OnCursorPosEnabled = true;
+
 	std::vector<OnCursorPosFunc> _OnCursorPosVec;
 	std::vector<OnKeyFunc> _OnKeyVec;
 	std::vector<OnMouseButtonFunc> _OnMouseButtonVec;
