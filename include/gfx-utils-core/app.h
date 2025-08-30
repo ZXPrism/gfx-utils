@@ -28,6 +28,8 @@ private:
 	int _WindowHeight;
 
 	bool _OnCursorEnabled = false;
+	double _PrevCursorPosX;
+	double _PrevCursorPosY;
 
 	std::vector<OnCursorPosFunc> _OnCursorPosVec;
 	std::vector<OnKeyFunc> _OnKeyVec;
