@@ -62,9 +62,12 @@ int main() {
 	                          .set_size(WINDOW_WIDTH * WINDOW_HEIGHT * 16)
 	                          .build();
 
+	RenderPassConfig render_pass_config;
+	render_pass_config._EnableDepthTest = false;
+
 	float time = 0.0f;
 	app.run([&](float dt [[maybe_unused]]) {
-		default_pass.use(false, [&]() {
+		default_pass.use(render_pass_config, [&]() {
 			compute_shader_program.use();
 			compute_shader_program.set_uniform("time", time * 0.5f);
 			storage_buffer.bind(0);
