@@ -20,7 +20,7 @@ RenderPass::RenderPassBuilder &RenderPass::RenderPassBuilder::set_depth_attachme
 	return *this;
 }
 
-RenderPass RenderPass::RenderPassBuilder::_build() {
+RenderPass RenderPass::RenderPassBuilder::_build() const {
 	RenderPass res;
 
 	size_t n_color_attachments = _ColorAttachments.size();

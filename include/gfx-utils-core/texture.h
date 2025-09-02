@@ -37,7 +37,7 @@ public:
 		TextureBuilder &set_size(size_t width, size_t height);
 		TextureBuilder &set_format(GLenum internal_format, GLenum cpu_format = GL_RGBA, GLenum cpu_comp_type = GL_FLOAT);
 
-		Texture _build();
+		Texture _build() const;
 	};
 
 	GLuint _get_handle() const;

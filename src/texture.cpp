@@ -21,7 +21,7 @@ Texture::TextureBuilder &Texture::TextureBuilder::set_format(GLenum internal_for
 	return *this;
 }
 
-Texture Texture::TextureBuilder::_build() {
+Texture Texture::TextureBuilder::_build() const {
 	Texture res;
 
 	auto texture_raw_handle = new GLuint(0);

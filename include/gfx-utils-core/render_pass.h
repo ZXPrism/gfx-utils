@@ -42,7 +42,7 @@ public:
 		RenderPassBuilder &add_color_attachment(const Texture &texture, bool clear_before_use, const glm::vec4 &clear_value_rgba = {});
 		RenderPassBuilder &set_depth_attachment(const Texture &texture);
 
-		RenderPass _build();
+		RenderPass _build() const;
 	};
 
 	// NOTE: depth_test flag is ONLY meaningful when writing to default FBO
