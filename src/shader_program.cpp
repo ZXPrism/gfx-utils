@@ -70,6 +70,7 @@ ShaderProgram ShaderProgram::ShaderProgramBuilder::_build() const {
 		static char link_log[1024];
 		glGetProgramInfoLog(*res._Program, sizeof(link_log), nullptr, link_log);
 		g_logger->warn("ShaderProgram::ShaderProgramBuilder ({}): program link failed:\n{}", _Name, link_log);
+		return res;
 	}
 
 	res._set_complete();

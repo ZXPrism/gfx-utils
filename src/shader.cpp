@@ -74,6 +74,7 @@ Shader Shader::ShaderBuilder::_build() const {
 		static char compile_log[1024];
 		glGetShaderInfoLog(*res._ShaderHandle, sizeof(compile_log), nullptr, compile_log);
 		g_logger->warn("Shader::ShaderBuilder ({}): shader compilation failed:\n{}", _Name, compile_log);
+		return res;
 	}
 
 	res._set_complete();
