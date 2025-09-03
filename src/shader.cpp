@@ -39,6 +39,8 @@ Shader::ShaderBuilder &Shader::ShaderBuilder::set_source_from_file(const std::st
 Shader Shader::ShaderBuilder::_build() const {
 	Shader res;
 
+	res._set_name(_Name);
+
 	if (_Source.empty()) {
 		return res;
 	}

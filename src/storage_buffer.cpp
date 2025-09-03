@@ -14,6 +14,8 @@ StorageBuffer::StorageBufferBuilder &StorageBuffer::StorageBufferBuilder::set_si
 StorageBuffer StorageBuffer::StorageBufferBuilder::_build() const {
 	StorageBuffer res;
 
+	res._set_name(_Name);
+
 	res._BufferSizeBytes = _BufferSizeBytes;
 
 	auto storage_buffer_raw_handle = new GLuint(0);

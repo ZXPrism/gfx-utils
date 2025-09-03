@@ -19,6 +19,8 @@ VertexBuffer::VertexBufferBuilder &VertexBuffer::VertexBufferBuilder::add_attrib
 VertexBuffer VertexBuffer::VertexBufferBuilder::_build() const {
 	VertexBuffer res;
 
+	res._set_name(_Name);
+
 	GLuint *raw_VAO_handle = new GLuint(0);
 	res._VAO = std::shared_ptr<GLuint>(raw_VAO_handle, [](GLuint *ptr) {
 		glDeleteVertexArrays(1, ptr);

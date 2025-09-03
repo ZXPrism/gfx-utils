@@ -51,6 +51,8 @@ ShaderProgram::ShaderProgramBuilder &ShaderProgram::ShaderProgramBuilder::add_sh
 ShaderProgram ShaderProgram::ShaderProgramBuilder::_build() const {
 	ShaderProgram res;
 
+	res._set_name(_Name);
+
 	GLuint *raw_program_handle = new GLuint(glCreateProgram());
 	res._Program = std::shared_ptr<GLuint>(raw_program_handle, [](GLuint *ptr) {
 		glDeleteProgram(*ptr);

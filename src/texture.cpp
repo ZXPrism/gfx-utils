@@ -74,6 +74,8 @@ Texture::TextureBuilder &Texture::TextureBuilder::set_data_from_file(const std::
 Texture Texture::TextureBuilder::_build() const {
 	Texture res;
 
+	res._set_name(_Name);
+
 	if (!_IsSizeSet) {
 		g_logger->warn("Texture({}): texture size is not set: texture won't be built", _Name);
 		return res;
