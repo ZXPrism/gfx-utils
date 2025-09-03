@@ -78,8 +78,11 @@ int main() {
 	                              .add_attribute(2)  // texture coordinates (vec2)
 	                              .build();
 
+	RenderPassConfig render_pass_config;
+	render_pass_config._EnableDepthTest = false;
+
 	app.run([&](float dt [[maybe_unused]]) {
-		color_pass.use(false, [&]() {
+		color_pass.use(render_pass_config, [&]() {
 			quad_vertex_buffer.use();
 			color_pass_shader_program.use();
 
@@ -89,7 +92,7 @@ int main() {
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		});
 
-		pp_pass.use(false, [&]() {
+		pp_pass.use(render_pass_config, [&]() {
 			quad_vertex_buffer.use();
 			pp_pass_shader_program.use();
 			glEnable(GL_FRAMEBUFFER_SRGB);  // TODO
