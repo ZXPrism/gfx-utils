@@ -36,7 +36,7 @@ Texture::TextureBuilder &Texture::TextureBuilder::set_data(const std::vector<uin
 		_Data = data;
 		_IsDataSet = true;
 	} else {
-		g_logger->warn("Texture({}): texture size is not set or mismatchs with input data size", _Name);
+		g_logger->warn("Texture ({}): texture size is not set or mismatchs with input data size", _Name);
 	}
 	return *this;
 }
@@ -48,12 +48,12 @@ Texture::TextureBuilder &Texture::TextureBuilder::set_data_from_file(const std::
 	// the 4th argument `req_comp` == 4: force in RGBA 4 channel format
 	uint8_t *data = stbi_load(file_path.c_str(), &width, &height, &n_channels_actual, 4);
 	if (!data) {
-		g_logger->warn("Texture({}): failed to load texture from {}, maybe the path is incorrect, or the file is corrupted", _Name, file_path);
+		g_logger->warn("Texture ({}): failed to load texture from {}, maybe the path is incorrect, or the file is corrupted", _Name, file_path);
 		return *this;
 	}
 
-	g_logger->info("Texture({}): loaded texture from {}", _Name, file_path);
-	g_logger->info("Texture({}): texture info: width = {}, height = {}, n_channels = {}",
+	g_logger->info("Texture ({}): loaded texture from {}", _Name, file_path);
+	g_logger->info("Texture ({}): texture info: width = {}, height = {}, n_channels = {}",
 	               _Name,
 	               width,
 	               height,
@@ -77,12 +77,12 @@ Texture Texture::TextureBuilder::_build() const {
 	res._set_name(_Name);
 
 	if (!_IsSizeSet) {
-		g_logger->warn("Texture({}): texture size is not set: texture won't be built", _Name);
+		g_logger->warn("Texture ({}): texture size is not set: texture won't be built", _Name);
 		return res;
 	}
 
 	if (!_IsFormatSet) {
-		g_logger->warn("Texture({}): texture format is not set: texture won't be built", _Name);
+		g_logger->warn("Texture ({}): texture format is not set: texture won't be built", _Name);
 		return res;
 	}
 
@@ -142,7 +142,7 @@ void Texture::_export_to_file(const std::string &file_path [[maybe_unused]]) con
 	               data.data(),
 	               static_cast<int>(_Info._Width * 4));
 
-	g_logger->info("Texture: saved texture to {}", file_path);
+	g_logger->info("Texture ({}): saved texture to {}", _Name, file_path);
 }
 
 }  // namespace gfxutils
