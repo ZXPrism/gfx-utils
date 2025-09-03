@@ -83,6 +83,9 @@ int main() {
 	                              .add_attribute(2)  // texture coordinates (vec2)
 	                              .build();
 
+	RenderPassConfig render_pass_config;
+	render_pass_config._EnableDepthTest = false;
+
 	int color_option = 0;
 	app.run([&](float dt [[maybe_unused]]) {
 		ImGui::Begin("Control", nullptr, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize);
@@ -92,14 +95,14 @@ int main() {
 		}
 		ImGui::End();
 
-		color_pass.use(false, [&]() {
+		color_pass.use(render_pass_config, [&]() {
 			quad_vertex_buffer.use();
 			color_pass_shader_program.use();
 
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		});
 
-		default_pass.use(false, [&]() {
+		default_pass.use(render_pass_config, [&]() {
 			quad_vertex_buffer.use();
 			default_pass_shader_program.use();
 			default_pass_shader_program.set_uniform("color_r_sampler", 0);

@@ -2,7 +2,9 @@
 
 #include <gfx-utils-core/interfaces/build_target.h>
 #include <gfx-utils-core/interfaces/builder.h>
+#include <gfx-utils-core/render_pass_config.h>
 #include <gfx-utils-core/texture.h>
+
 
 #include <functional>
 #include <optional>
@@ -40,12 +42,12 @@ public:
 		RenderPassBuilder &add_color_attachment(const Texture &texture, bool clear_before_use, const glm::vec4 &clear_value_rgba = {});
 		RenderPassBuilder &set_depth_attachment(const Texture &texture);
 
-		RenderPass _build();
+		RenderPass _build() const;
 	};
 
 	// NOTE: depth_test flag is ONLY meaningful when writing to default FBO
 	// depth attachment(if any) will always be cleared regardless of this flag
-	void use(bool depth_test, const std::function<void()> &callback) const;
+	void use(const RenderPassConfig &render_pass_config, const std::function<void()> &callback) const;
 
 private:
 	RenderPass() = default;

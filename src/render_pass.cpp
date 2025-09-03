@@ -20,7 +20,7 @@ RenderPass::RenderPassBuilder &RenderPass::RenderPassBuilder::set_depth_attachme
 	return *this;
 }
 
-RenderPass RenderPass::RenderPassBuilder::_build() {
+RenderPass RenderPass::RenderPassBuilder::_build() const {
 	RenderPass res;
 
 	size_t n_color_attachments = _ColorAttachments.size();
@@ -76,11 +76,11 @@ RenderPass RenderPass::RenderPassBuilder::_build() {
 	return res;
 }
 
-void RenderPass::use(bool depth_test, const std::function<void()> &callback) const {
+void RenderPass::use(const RenderPassConfig &render_pass_config, const std::function<void()> &callback) const {
 	glBindFramebuffer(GL_FRAMEBUFFER, *_FBO);
 
 	if (_IsDefault) {
-		if (depth_test) {
+		if (render_pass_config._EnableDepthTest) {
 			glEnable(GL_DEPTH_TEST);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		} else {

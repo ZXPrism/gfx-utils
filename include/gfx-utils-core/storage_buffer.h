@@ -27,7 +27,7 @@ public:
 
 		StorageBufferBuilder &set_size(size_t buffer_size_bytes);
 
-		StorageBuffer _build();
+		StorageBuffer _build() const;
 	};
 
 	void bind(size_t binding_point) const;

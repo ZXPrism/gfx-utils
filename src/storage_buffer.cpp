@@ -11,7 +11,7 @@ StorageBuffer::StorageBufferBuilder &StorageBuffer::StorageBufferBuilder::set_si
 	return *this;
 }
 
-StorageBuffer StorageBuffer::StorageBufferBuilder::_build() {
+StorageBuffer StorageBuffer::StorageBufferBuilder::_build() const {
 	StorageBuffer res;
 
 	res._BufferSizeBytes = _BufferSizeBytes;

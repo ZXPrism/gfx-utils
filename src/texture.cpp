@@ -69,7 +69,7 @@ Texture::TextureBuilder &Texture::TextureBuilder::set_data_from_file(const std::
 	return *this;
 }
 
-Texture Texture::TextureBuilder::_build() {
+Texture Texture::TextureBuilder::_build() const {
 	Texture res;
 
 	if (!_IsSizeSet) {
