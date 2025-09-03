@@ -75,6 +75,8 @@ ShaderProgram ShaderProgram::ShaderProgramBuilder::_build() const {
 		return res;
 	}
 
+	g_logger->info("ShaderProgram::ShaderProgramBuilder ({}): successfully built shader program", _Name);
+
 	res._set_complete();
 
 	return res;

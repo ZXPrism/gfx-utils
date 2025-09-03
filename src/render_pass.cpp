@@ -41,6 +41,7 @@ RenderPass RenderPass::RenderPassBuilder::_build() const {
 	});
 
 	if (res._IsDefault) {
+		g_logger->info("RenderPass::RenderPassBuilder ({}): successfully built default render pass", _Name);
 		return res;
 	}
 

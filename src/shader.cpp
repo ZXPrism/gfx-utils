@@ -79,6 +79,8 @@ Shader Shader::ShaderBuilder::_build() const {
 		return res;
 	}
 
+	g_logger->info("Shader::ShaderBuilder ({}): successfully built shader", _Name);
+
 	res._set_complete();
 
 	return res;

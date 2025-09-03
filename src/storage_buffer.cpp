@@ -1,5 +1,7 @@
 #include <gfx-utils-core/storage_buffer.h>
 
+#include <gfx-utils-core/logger.h>
+
 namespace gfxutils {
 
 StorageBuffer::StorageBufferBuilder::StorageBufferBuilder(const std::string &name)
@@ -28,6 +30,10 @@ StorageBuffer StorageBuffer::StorageBufferBuilder::_build() const {
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, *res._StorageBufferHandle);
 	// TODO: evaluate the usage on perf effects and consider if it's necessary to expose it
 	glBufferData(GL_SHADER_STORAGE_BUFFER, _BufferSizeBytes, nullptr, GL_DYNAMIC_COPY);
+
+	g_logger->info("StorageBuffer::StorageBufferBuilder ({}): successfully built storage buffer", _Name);
+
+	res._set_complete();
 
 	return res;
 }
