@@ -20,6 +20,7 @@ int main() {
 	app.set_clear_color({ 0.341f, 0.808f, 0.980f });
 
 	// prepare shaders
+	// pp stands for post-processing
 	ShaderProgram::ShaderProgramBuilder pp_pass_shader_program_builder("pp_pass_shader_program");
 	{
 		Shader::ShaderBuilder vs_builder("pp_pass_vs");
@@ -41,7 +42,6 @@ int main() {
 	pp_pass_shader_program.set_uniform("window_width", WINDOW_WIDTH);
 	pp_pass_shader_program.set_uniform("window_height", WINDOW_HEIGHT);
 
-	// pp stands for post-processing
 	ShaderProgram::ShaderProgramBuilder default_pass_shader_program_builder("default_pass_shader_program");
 	{
 		Shader::ShaderBuilder vs_builder("default_pass_vs");
