@@ -79,17 +79,20 @@ RenderPass RenderPass::RenderPassBuilder::_build() const {
 void RenderPass::use(const RenderPassConfig &render_pass_config, const std::function<void()> &callback) const {
 	glBindFramebuffer(GL_FRAMEBUFFER, *_FBO);
 
+	if (render_pass_config._EnableDepthTest) {
+		glEnable(GL_DEPTH_TEST);
+	} else {
+		glDisable(GL_DEPTH_TEST);
+	}
+
 	if (_IsDefault) {
 		if (render_pass_config._EnableDepthTest) {
-			glEnable(GL_DEPTH_TEST);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		} else {
-			glDisable(GL_DEPTH_TEST);
 			glClear(GL_COLOR_BUFFER_BIT);
 		}
 	} else {
-		if (_DepthAttachment.has_value()) {
-			glEnable(GL_DEPTH_TEST);
+		if (render_pass_config._EnableDepthTest && _DepthAttachment.has_value()) {
 			glClear(GL_DEPTH_BUFFER_BIT);
 		}
 
