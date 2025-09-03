@@ -23,6 +23,8 @@ RenderPass::RenderPassBuilder &RenderPass::RenderPassBuilder::set_depth_attachme
 RenderPass RenderPass::RenderPassBuilder::_build() const {
 	RenderPass res;
 
+	res._set_name(_Name);
+
 	size_t n_color_attachments = _ColorAttachments.size();
 	res._ColorAttachments = _ColorAttachments;
 	res._ColorAttachmentClearFlags = _ColorAttachmentClearFlags;
@@ -39,6 +41,7 @@ RenderPass RenderPass::RenderPassBuilder::_build() const {
 	});
 
 	if (res._IsDefault) {
+		g_logger->info("RenderPass::RenderPassBuilder ({}): successfully built default render pass", _Name);
 		return res;
 	}
 

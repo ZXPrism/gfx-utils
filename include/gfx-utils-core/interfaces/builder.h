@@ -10,7 +10,7 @@ protected:
 	std::string _Name;
 
 public:
-	IBuilder(const std::string &name)
+	explicit IBuilder(const std::string &name)
 	    : _Name(name) {
 	}
 
@@ -19,10 +19,6 @@ public:
 	BuildTarget build() const {
 		return static_cast<const Derived *>(this)->_build();
 	}
-
-protected:
-	IBuilder() = default;
-	~IBuilder() = default;
 };
 
 }  // namespace gfxutils

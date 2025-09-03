@@ -7,8 +7,8 @@
 #include <glad/glad.h>
 #include <imgui.h>
 
-constexpr int WINDOW_WIDTH = 800;
-constexpr int WINDOW_HEIGHT = 600;
+constexpr int WINDOW_WIDTH = 1280;
+constexpr int WINDOW_HEIGHT = 960;
 constexpr const char *WINDOW_TITLE = "Example: texture_io";
 
 int main() {
@@ -63,11 +63,11 @@ int main() {
 	// prepare textures (attachments)
 	auto input_texture = Texture::TextureBuilder("input_texture")
 	                         .set_data_from_file("assets/texture_io/image.png")
-	                         .set_format(GL_RGBA32F)
+	                         .set_format(GL_SRGB8_ALPHA8)
 	                         .build();
 	auto albedo = Texture::TextureBuilder("albedo")
 	                  .set_size(WINDOW_WIDTH, WINDOW_HEIGHT)
-	                  .set_format(GL_RGBA32F)
+	                  .set_format(GL_SRGB8_ALPHA8)
 	                  .build();
 
 	// prepare render passes
@@ -84,7 +84,7 @@ int main() {
 
 	RenderPassConfig render_pass_config;
 	render_pass_config._EnableDepthTest = false;
-	render_pass_config._EnableSRGB = false;
+	render_pass_config._EnableSRGB = true;
 
 	app.run([&](float dt [[maybe_unused]]) {
 		pp_pass.use(render_pass_config, [&]() {

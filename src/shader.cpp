@@ -39,6 +39,8 @@ Shader::ShaderBuilder &Shader::ShaderBuilder::set_source_from_file(const std::st
 Shader Shader::ShaderBuilder::_build() const {
 	Shader res;
 
+	res._set_name(_Name);
+
 	if (_Source.empty()) {
 		return res;
 	}
@@ -76,6 +78,8 @@ Shader Shader::ShaderBuilder::_build() const {
 		g_logger->warn("Shader::ShaderBuilder ({}): shader compilation failed:\n{}", _Name, compile_log);
 		return res;
 	}
+
+	g_logger->info("Shader::ShaderBuilder ({}): successfully built shader", _Name);
 
 	res._set_complete();
 
