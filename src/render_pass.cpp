@@ -79,6 +79,12 @@ RenderPass RenderPass::RenderPassBuilder::_build() const {
 void RenderPass::use(const RenderPassConfig &render_pass_config, const std::function<void()> &callback) const {
 	glBindFramebuffer(GL_FRAMEBUFFER, *_FBO);
 
+	if (render_pass_config._EnableSRGB) {
+		glEnable(GL_FRAMEBUFFER_SRGB);
+	} else {
+		glDisable(GL_FRAMEBUFFER_SRGB);
+	}
+
 	if (render_pass_config._EnableDepthTest) {
 		glEnable(GL_DEPTH_TEST);
 	} else {

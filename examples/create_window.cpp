@@ -17,6 +17,7 @@ int main() {
 
 	RenderPassConfig render_pass_config;
 	render_pass_config._EnableDepthTest = false;
+	render_pass_config._EnableSRGB = false;
 
 	app.run([&](float dt [[maybe_unused]]) {
 		default_pass.use(render_pass_config, [&]() {

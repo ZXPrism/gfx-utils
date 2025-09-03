@@ -64,6 +64,7 @@ int main() {
 
 	RenderPassConfig render_pass_config;
 	render_pass_config._EnableDepthTest = false;
+	render_pass_config._EnableSRGB = false;
 
 	float time = 0.0f;
 	app.run([&](float dt [[maybe_unused]]) {
