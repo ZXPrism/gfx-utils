@@ -3,6 +3,7 @@ set_project("gfx-utils")
 add_rules("mode.debug", "mode.release")
 add_requires("spdlog", "glm", "glad", "glfw", "stb")
 add_requires("imgui", {configs = { glfw = true, opengl3 = true }})
+add_requires("yaml-cpp")
 
 target("gfx-utils-core")
     set_languages("cxx20")
@@ -22,7 +23,7 @@ target("gfx-utils-core")
     end
 target_end()
 
-function add_example(example_name)
+function add_example(example_name, extra_pkgs)
     target("example-" .. example_name)
         set_languages("cxx20")
         set_kind("binary")
@@ -31,6 +32,10 @@ function add_example(example_name)
 
         add_files("examples/" .. example_name .. ".cpp")
         add_deps("gfx-utils-core")
+
+        if extra_pkgs then
+            add_packages(table.unpack(extra_pkgs))
+        end
 
         if is_plat("windows") then
             add_cxflags("/utf-8", {force = true})
@@ -49,3 +54,4 @@ add_example("create_window")
 add_example("mrt")
 add_example("compute")
 add_example("texture_io")
+add_example("post_processing")
