@@ -18,6 +18,7 @@ target("gfx-utils-core")
     if is_plat("windows") then
         add_cxflags("/utf-8", {force = true})
         add_cxxflags("/utf-8", {force = true})
+        add_cxxflags("/wd4068", {force = true})
     end
 target_end()
 
@@ -34,6 +35,7 @@ function add_example(example_name)
         if is_plat("windows") then
             add_cxflags("/utf-8", {force = true})
             add_cxxflags("/utf-8", {force = true})
+            add_cxxflags("/wd4068", {force = true})
         end
 
         after_build(function (target)
@@ -46,3 +48,4 @@ end
 add_example("create_window")
 add_example("mrt")
 add_example("compute")
+add_example("texture_io")
