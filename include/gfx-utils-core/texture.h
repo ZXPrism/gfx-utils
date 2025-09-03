@@ -19,24 +19,29 @@ enum class TextureFormat {
 	// todo
 };
 
+struct TextureInfo {
+	size_t _Width;
+	size_t _Height;
+	GLenum _InternalFormat;
+	GLenum _CPUFormat;
+	GLenum _CPUCompType;
+};
+
 class Texture : public IBuildTarget<Texture>,
                 public IExportableResource<Texture> {
 private:
 	std::shared_ptr<GLuint> _TextureHandle;
+	TextureInfo _Info;
 
 public:
 	class TextureBuilder : public IBuilder<TextureBuilder, Texture> {
 	private:
 		std::vector<uint8_t> _Data;
-		size_t _Width;
-		size_t _Height;
-		GLenum _InternalFormat;
-		GLenum _CPUFormat;
-		GLenum _CPUCompType;
-
 		bool _IsSizeSet = false;
 		bool _IsDataSet = false;
 		bool _IsFormatSet = false;
+
+		TextureInfo _Info;
 
 	public:
 		TextureBuilder(const std::string &name);

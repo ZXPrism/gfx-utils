@@ -20,34 +20,15 @@ int main() {
 	app.set_clear_color({ 0.341f, 0.808f, 0.980f });
 
 	// prepare shaders
-	ShaderProgram::ShaderProgramBuilder color_pass_shader_program_builder("color_pass_shader_program");
-	{
-		Shader::ShaderBuilder vs_builder("color_pass_vs");
-		auto vertex_shader = vs_builder
-		                         .set_type(ShaderType::VERTEX_SHADER)
-		                         .set_source_from_file("assets/texture_io/color.vert")
-		                         .build();
-
-		Shader::ShaderBuilder fs_builder("color_pass_fs");
-		auto fragment_shader = fs_builder
-		                           .set_type(ShaderType::FRAGMENT_SHADER)
-		                           .set_source_from_file("assets/texture_io/color.frag")
-		                           .build();
-
-		color_pass_shader_program_builder.add_shader(vertex_shader).add_shader(fragment_shader);
-	}
-	auto color_pass_shader_program = color_pass_shader_program_builder.build();
-
-	// pp stands for post-processing
 	ShaderProgram::ShaderProgramBuilder pp_pass_shader_program_builder("pp_pass_shader_program");
 	{
-		Shader::ShaderBuilder vs_builder("pp_vs");
+		Shader::ShaderBuilder vs_builder("pp_pass_vs");
 		auto vertex_shader = vs_builder
 		                         .set_type(ShaderType::VERTEX_SHADER)
 		                         .set_source_from_file("assets/texture_io/pp.vert")
 		                         .build();
 
-		Shader::ShaderBuilder fs_builder("pp_fs");
+		Shader::ShaderBuilder fs_builder("pp_pass_fs");
 		auto fragment_shader = fs_builder
 		                           .set_type(ShaderType::FRAGMENT_SHADER)
 		                           .set_source_from_file("assets/texture_io/pp.frag")
@@ -56,11 +37,33 @@ int main() {
 		pp_pass_shader_program_builder.add_shader(vertex_shader).add_shader(fragment_shader);
 	}
 	auto pp_pass_shader_program = pp_pass_shader_program_builder.build();
+	pp_pass_shader_program.use();
+	pp_pass_shader_program.set_uniform("window_width", WINDOW_WIDTH);
+	pp_pass_shader_program.set_uniform("window_height", WINDOW_HEIGHT);
+
+	// pp stands for post-processing
+	ShaderProgram::ShaderProgramBuilder default_pass_shader_program_builder("default_pass_shader_program");
+	{
+		Shader::ShaderBuilder vs_builder("default_pass_vs");
+		auto vertex_shader = vs_builder
+		                         .set_type(ShaderType::VERTEX_SHADER)
+		                         .set_source_from_file("assets/texture_io/default.vert")
+		                         .build();
+
+		Shader::ShaderBuilder fs_builder("default_pass_fs");
+		auto fragment_shader = fs_builder
+		                           .set_type(ShaderType::FRAGMENT_SHADER)
+		                           .set_source_from_file("assets/texture_io/default.frag")
+		                           .build();
+
+		default_pass_shader_program_builder.add_shader(vertex_shader).add_shader(fragment_shader);
+	}
+	auto default_pass_shader_program = default_pass_shader_program_builder.build();
 
 	// prepare textures (attachments)
 	auto input_texture = Texture::TextureBuilder("input_texture")
 	                         .set_data_from_file("assets/texture_io/image.png")
-	                         .set_format(GL_SRGB8_ALPHA8)
+	                         .set_format(GL_RGBA32F)
 	                         .build();
 	auto albedo = Texture::TextureBuilder("albedo")
 	                  .set_size(WINDOW_WIDTH, WINDOW_HEIGHT)
@@ -68,11 +71,12 @@ int main() {
 	                  .build();
 
 	// prepare render passes
-	auto color_pass = RenderPass::RenderPassBuilder("color_pass")
-	                      .add_color_attachment(albedo, false)
-	                      .build();
-	auto pp_pass = RenderPass::RenderPassBuilder("pp_pass").build();
+	auto pp_pass = RenderPass::RenderPassBuilder("pp_pass")
+	                   .add_color_attachment(albedo, false)
+	                   .build();
+	auto default_pass = RenderPass::RenderPassBuilder("default_pass").build();
 
+	// prepare vertices
 	auto quad_vertex_buffer = VertexBuffer::VertexBufferBuilder("fullscreen_quad", g_screen_quad_vertices)
 	                              .add_attribute(2)  // position (vec2)
 	                              .add_attribute(2)  // texture coordinates (vec2)
@@ -80,26 +84,31 @@ int main() {
 
 	RenderPassConfig render_pass_config;
 	render_pass_config._EnableDepthTest = false;
+	render_pass_config._EnableSRGB = false;
 
 	app.run([&](float dt [[maybe_unused]]) {
-		color_pass.use(render_pass_config, [&]() {
+		pp_pass.use(render_pass_config, [&]() {
 			quad_vertex_buffer.use();
-			color_pass_shader_program.use();
+			pp_pass_shader_program.use();
 
 			input_texture.use(0);
-			color_pass_shader_program.set_uniform("input_texture_sampler", 0);
+			pp_pass_shader_program.set_uniform("input_texture_sampler", 0);
 
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		});
 
-		pp_pass.use(render_pass_config, [&]() {
+		default_pass.use(render_pass_config, [&]() {
 			quad_vertex_buffer.use();
-			pp_pass_shader_program.use();
-			glEnable(GL_FRAMEBUFFER_SRGB);  // TODO
+			default_pass_shader_program.use();
+
+			albedo.use(0);
+			default_pass_shader_program.set_uniform("albedo_sampler", 0);
 
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		});
 	});
+
+	albedo.export_to_file("output.png");
 
 	app.shutdown();
 
