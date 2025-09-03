@@ -41,19 +41,6 @@ void App::run(const std::function<void(float)> &callback) {
 
 		callback(delta_time);
 
-		// ImGui::Begin("control");
-		// {
-		// 	static bool wireframe = false;
-		// 	if (ImGui::Checkbox("wireframe mode", &wireframe)) {
-		// 		if (wireframe) {
-		// 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		// 		} else {
-		// 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		// 		}
-		// 	}
-		// }
-		// ImGui::End();
-
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -211,7 +198,6 @@ void App::_init_IMGUI() {
 }
 
 void App::_init_IMGUI_styles() {
-
 	auto &style = ImGui::GetStyle();
 	auto &colors = style.Colors;
 
