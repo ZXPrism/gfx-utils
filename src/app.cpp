@@ -198,6 +198,7 @@ void App::_init_IMGUI() {
 }
 
 void App::_init_IMGUI_styles() {
+	auto &io = ImGui::GetIO();
 	auto &style = ImGui::GetStyle();
 	auto &colors = style.Colors;
 
@@ -224,6 +225,8 @@ void App::_init_IMGUI_styles() {
 	style.FrameRounding = 4;
 	style.WindowRounding = 8;
 	style.ChildRounding = 8;
+
+	io.FontGlobalScale = io.DisplayFramebufferScale.y;
 }
 
 void App::_init_IMGUI_fonts() {
