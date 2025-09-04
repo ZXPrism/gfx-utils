@@ -13,7 +13,7 @@ private:
 	bool _IsComplete = false;
 
 public:
-	bool is_complete() const {
+	[[nodiscard]] bool is_complete() const {
 		return _IsComplete;
 	}
 
@@ -21,7 +21,7 @@ public:
 		_IsComplete = true;
 	}
 
-	std::string get_name() const {
+	[[nodiscard]] std::string get_name() const {
 		return _Name;
 	}
 

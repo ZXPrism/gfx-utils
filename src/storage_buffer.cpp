@@ -20,7 +20,7 @@ StorageBuffer StorageBuffer::StorageBufferBuilder::_build() const {
 
 	res._BufferSizeBytes = _BufferSizeBytes;
 
-	auto storage_buffer_raw_handle = new GLuint(0);
+	auto *storage_buffer_raw_handle = new GLuint(0);
 	res._StorageBufferHandle = std::shared_ptr<GLuint>(storage_buffer_raw_handle, [&](GLuint *ptr) {
 		glDeleteBuffers(1, ptr);
 		delete ptr;
@@ -42,7 +42,7 @@ void StorageBuffer::bind(size_t binding_point) const {
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, static_cast<GLuint>(binding_point), *_StorageBufferHandle);
 }
 
-void StorageBuffer::set_data(const uint8_t *const data, size_t n_bytes) {
+void StorageBuffer::set_data(const uint8_t *data, size_t n_bytes) {
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, *_StorageBufferHandle);
 	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, static_cast<GLsizeiptr>(n_bytes), data);
 }

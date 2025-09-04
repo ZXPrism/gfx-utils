@@ -30,9 +30,9 @@ RenderPass RenderPass::RenderPassBuilder::_build() const {
 	res._ColorAttachmentClearFlags = _ColorAttachmentClearFlags;
 	res._ColorAttachmentClearValues = _ColorAttachmentClearValues;
 
-	res._IsDefault = !n_color_attachments && !_DepthAttachment.has_value();  // no attachments, fallback to default FBO
+	res._IsDefault = n_color_attachments == 0 && !_DepthAttachment.has_value();  // no attachments, fallback to default FBO
 
-	auto fbo_raw_handle = new GLuint(0);
+	auto *fbo_raw_handle = new GLuint(0);
 	res._FBO = std::shared_ptr<GLuint>(fbo_raw_handle, [=](GLuint *ptr) {
 		if (!res._IsDefault) {  // if fallback, the delete is handled by the window system, no need to manually delete it
 			glDeleteFramebuffers(1, ptr);

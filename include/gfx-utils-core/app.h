@@ -45,9 +45,9 @@ public:
 	void set_flag_vsync(bool flag) const;
 	void set_clear_color(const glm::vec3 &clear_color) const;
 
-	std::pair<int, int> get_window_size() const;
-	float get_aspect_ratio() const;
-	bool check_key_pressed(int key) const;
+	[[nodiscard]] std::pair<int, int> get_window_size() const;
+	[[nodiscard]] float get_aspect_ratio() const;
+	[[nodiscard]] bool check_key_pressed(int key) const;
 
 	void register_on_key_func(OnKeyFunc func);
 	void register_on_mouse_button_func(OnMouseButtonFunc func);
@@ -63,10 +63,9 @@ public:
 
 private:
 	void _init_window(const std::string &title, int width, int height);
-	void _init_opengl();
+	void _init_opengl() const;
 	void _init_IMGUI();
 	void _init_IMGUI_styles();
-	void _init_IMGUI_fonts();
 	void _init_callbacks();
 	void _shutdown_window();
 	void _shutdown_IMGUI();

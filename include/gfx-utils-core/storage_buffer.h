@@ -26,11 +26,11 @@ public:
 
 		StorageBufferBuilder &set_size(size_t buffer_size_bytes);
 
-		StorageBuffer _build() const;
+		[[nodiscard]] StorageBuffer _build() const;
 	};
 
 	void bind(size_t binding_point) const;
-	void set_data(const uint8_t *const data, size_t n_bytes);
+	void set_data(const uint8_t *data, size_t n_bytes);
 };
 
 }  // namespace gfxutils

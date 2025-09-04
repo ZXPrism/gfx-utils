@@ -21,7 +21,7 @@ VertexBuffer VertexBuffer::VertexBufferBuilder::_build() const {
 
 	res._set_name(_Name);
 
-	GLuint *raw_VAO_handle = new GLuint(0);
+	auto *raw_VAO_handle = new GLuint(0);
 	res._VAO = std::shared_ptr<GLuint>(raw_VAO_handle, [](GLuint *ptr) {
 		glDeleteVertexArrays(1, ptr);
 		delete ptr;
@@ -29,7 +29,7 @@ VertexBuffer VertexBuffer::VertexBufferBuilder::_build() const {
 	glGenVertexArrays(1, res._VAO.get());
 	glBindVertexArray(*res._VAO);
 
-	GLuint *raw_VBO_handle = new GLuint(0);
+	auto *raw_VBO_handle = new GLuint(0);
 	res._VBO = std::shared_ptr<GLuint>(raw_VBO_handle, [](GLuint *ptr) {
 		glDeleteBuffers(1, ptr);
 		delete ptr;

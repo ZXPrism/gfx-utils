@@ -6,6 +6,8 @@
 #include <glfw/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <algorithm>
+
 namespace gfxutils {
 
 Camera::Camera() {
@@ -14,10 +16,11 @@ Camera::Camera() {
 	_Projection = glm::perspective(config::fovy, app.get_aspect_ratio(), 0.1f, 100.0f);
 
 	app.register_on_cursor_pos_func([&](double x_pos, double y_pos) {
-		static double prev_x_pos{}, prev_y_pos{};
+		static double prev_x_pos = 0.0;
+		static double prev_y_pos = 0.0;
 
-		float dx = static_cast<float>(x_pos - prev_x_pos);
-		float dy = static_cast<float>(y_pos - prev_y_pos);
+		auto dx = static_cast<float>(x_pos - prev_x_pos);
+		auto dy = static_cast<float>(y_pos - prev_y_pos);
 
 		dx *= _MouseSens;
 		dy *= _MouseSens;
@@ -25,12 +28,7 @@ Camera::Camera() {
 		_Yaw += dx;
 		_Pitch -= dy;
 
-		if (_Pitch > 89.0f) {
-			_Pitch = 89.0f;
-		}
-		if (_Pitch < -89.0f) {
-			_Pitch = -89.0f;
-		}
+		_Pitch = std::clamp(_Pitch, -89.0f, 89.0f);
 
 		prev_x_pos = x_pos;
 		prev_y_pos = y_pos;

@@ -26,7 +26,7 @@ public:
 
 		VertexBufferBuilder &add_attribute(size_t n_bytes);
 
-		VertexBuffer _build() const;
+		[[nodiscard]] VertexBuffer _build() const;
 	};
 
 	void use() const;

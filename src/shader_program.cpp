@@ -2,6 +2,7 @@
 
 #include <gfx-utils-core/logger.h>
 
+#include <array>
 #include <format>
 
 namespace gfxutils {
@@ -19,7 +20,7 @@ void ShaderProgram::set_uniform(const std::string &name, float scalar) {
 }
 
 void ShaderProgram::set_uniform(const std::string &name, const glm::mat4 &matrix) {
-	glUniformMatrix4fv(get_uniform_location(name), 1, false, &matrix[0][0]);
+	glUniformMatrix4fv(get_uniform_location(name), 1, GL_FALSE, &matrix[0][0]);
 }
 
 void ShaderProgram::set_uniform(const std::string &name, const glm::vec2 &vector) {
@@ -52,8 +53,8 @@ ShaderProgram ShaderProgram::ShaderProgramBuilder::_build() const {
 
 	res._set_name(_Name);
 
-	GLuint *raw_program_handle = new GLuint(glCreateProgram());
-	res._Program = std::shared_ptr<GLuint>(raw_program_handle, [](GLuint *ptr) {
+	auto *raw_program_handle = new GLuint(glCreateProgram());
+	res._Program = std::shared_ptr<GLuint>(raw_program_handle, [](const GLuint *ptr) {
 		glDeleteProgram(*ptr);
 		delete ptr;
 	});
@@ -67,10 +68,10 @@ ShaderProgram ShaderProgram::ShaderProgramBuilder::_build() const {
 
 	GLint link_status;
 	glGetProgramiv(*res._Program, GL_LINK_STATUS, &link_status);
-	if (!link_status) {
-		static char link_log[1024];
-		glGetProgramInfoLog(*res._Program, sizeof(link_log), nullptr, link_log);
-		g_logger->warn("ShaderProgram::ShaderProgramBuilder ({}): program link failed:\n{}", _Name, link_log);
+	if (link_status == 0) {
+		static std::array<char, 1024> link_log;
+		glGetProgramInfoLog(*res._Program, sizeof(link_log), nullptr, link_log.data());
+		g_logger->warn("ShaderProgram::ShaderProgramBuilder ({}): program link failed:\n{}", _Name, link_log.data());
 		return res;
 	}
 

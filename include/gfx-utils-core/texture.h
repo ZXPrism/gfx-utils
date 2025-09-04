@@ -51,12 +51,12 @@ public:
 		TextureBuilder &set_data(const std::vector<uint8_t> &data);
 		TextureBuilder &set_data_from_file(const std::string &file_path);
 
-		Texture _build() const;
+		[[nodiscard]] Texture _build() const;
 	};
 
 	void use(size_t texture_unit) const;
 
-	GLuint _get_handle() const;
+	[[nodiscard]] GLuint _get_handle() const;
 	void _export_to_file(const std::string &file_path) const;
 };
 

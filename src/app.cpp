@@ -34,7 +34,7 @@ void App::run(const std::function<void(float)> &callback) {
 	float delta_time_cnt = 0.0f;
 	int fps_smooth = 0;
 
-	while (!glfwWindowShouldClose(_Window)) {
+	while (glfwWindowShouldClose(_Window) == 0) {
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
@@ -55,7 +55,7 @@ void App::run(const std::function<void(float)> &callback) {
 		if (delta_time_cnt >= 0.5f) {
 			delta_time_cnt = 0.0f;
 
-			fps_smooth = static_cast<int>(fps_smooth * config::fps_lerp_coeff + 1.0f / delta_time * (1 - config::fps_lerp_coeff));
+			fps_smooth = static_cast<int>((fps_smooth * config::fps_lerp_coeff) + (1.0f / delta_time * (1 - config::fps_lerp_coeff)));
 			glfwSetWindowTitle(_Window, std::format("{} - fps: {}", _WindowTitle, fps_smooth).c_str());
 		}
 	}
@@ -93,7 +93,7 @@ void App::_init_callbacks() {
 	    glfwSetCursorPosCallback(_Window, [](GLFWwindow *window, double x_pos, double y_pos) {
 		    static_cast<App *>(glfwGetWindowUserPointer(window))->on_cursor_pos(x_pos, y_pos);
 	    });
-	if (prev_cursor_pos_callback) {
+	if (prev_cursor_pos_callback != nullptr) {
 		register_on_cursor_pos_func(std::bind_front(prev_cursor_pos_callback, _Window));
 	}
 
@@ -101,7 +101,7 @@ void App::_init_callbacks() {
 	    glfwSetKeyCallback(_Window, [](GLFWwindow *window, int key, int scan_code, int action, int mods) {
 		    static_cast<App *>(glfwGetWindowUserPointer(window))->on_key(key, scan_code, action, mods);
 	    });
-	if (prev_key_callback) {
+	if (prev_key_callback != nullptr) {
 		register_on_key_func(std::bind_front(prev_key_callback, _Window));
 	}
 
@@ -109,7 +109,7 @@ void App::_init_callbacks() {
 	    glfwSetMouseButtonCallback(_Window, [](GLFWwindow *window, int button, int action, int mods) {
 		    static_cast<App *>(glfwGetWindowUserPointer(window))->on_mouse_button(button, action, mods);
 	    });
-	if (prev_mouse_button_callback) {
+	if (prev_mouse_button_callback != nullptr) {
 		register_on_mouse_button_func(std::bind_front(prev_mouse_button_callback, _Window));
 	}
 
@@ -117,7 +117,7 @@ void App::_init_callbacks() {
 	    glfwSetScrollCallback(_Window, [](GLFWwindow *window, double x_offset, double y_offset) {
 		    static_cast<App *>(glfwGetWindowUserPointer(window))->on_scroll(x_offset, y_offset);
 	    });
-	if (prev_scroll_callback) {
+	if (prev_scroll_callback != nullptr) {
 		register_on_scroll_func(std::bind_front(prev_scroll_callback, _Window));
 	}
 
@@ -125,7 +125,7 @@ void App::_init_callbacks() {
 	    glfwSetWindowSizeCallback(_Window, [](GLFWwindow *window, int width, int height) {
 		    static_cast<App *>(glfwGetWindowUserPointer(window))->on_window_size(width, height);
 	    });
-	if (prev_window_size_callback) {
+	if (prev_window_size_callback != nullptr) {
 		register_on_window_size_func(std::bind_front(prev_window_size_callback, _Window));
 	}
 
@@ -163,7 +163,7 @@ void App::_init_window(const std::string &title, int width, int height) {
 	glfwWindowHint(GLFW_SAMPLES, 4);
 
 	_Window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
-	if (!_Window) {
+	if (_Window == nullptr) {
 		g_logger->error("App: failed to create window");
 		return;
 	}
@@ -171,14 +171,14 @@ void App::_init_window(const std::string &title, int width, int height) {
 	glfwMakeContextCurrent(_Window);
 
 	// center the window
-	auto vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+	const auto *vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 	glfwSetWindowPos(_Window, (vidmode->width - _WindowWidth) / 2, (vidmode->height - _WindowHeight) / 2);
 
 	glfwSetInputMode(_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
-void App::_init_opengl() {
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+void App::_init_opengl() const {
+	if (gladLoadGLLoader((GLADloadproc)glfwGetProcAddress) == 0) {
 		g_logger->error("App: fail to init opengl");
 		return;
 	}
@@ -229,11 +229,6 @@ void App::_init_IMGUI_styles() {
 	io.FontGlobalScale = io.DisplayFramebufferScale.y;
 }
 
-void App::_init_IMGUI_fonts() {
-	auto &io = ImGui::GetIO();
-	io.Fonts->AddFontFromFileTTF("assets/fonts/NotoSansCJK-Regular.otf", 20.0f, nullptr, io.Fonts->GetGlyphRangesChineseFull());
-}
-
 void App::_shutdown_window() {
 	glfwDestroyWindow(_Window);
 	glfwTerminate();
@@ -265,20 +260,20 @@ void App::register_on_window_size_func(OnWindowSizeFunc func) {
 	_OnWindowSizeVec.push_back(func);
 }
 
-void App::on_cursor_pos(double xPos, double yPos) {
+void App::on_cursor_pos(double x_pos, double y_pos) {
 	if (!_OnCursorEnabled) {
 		size_t n_cursor_pos_callback = _OnCursorPosVec.size();
 		for (size_t i = 1; i < n_cursor_pos_callback; i++) {
-			_OnCursorPosVec[i](xPos, yPos);
+			_OnCursorPosVec[i](x_pos, y_pos);
 		}
 	} else {
-		_OnCursorPosVec[0](xPos, yPos);  // for imgui, POTENTIAL ISSUE: if imgui is disabled...
+		_OnCursorPosVec[0](x_pos, y_pos);  // for imgui, POTENTIAL ISSUE: if imgui is disabled...
 	}
 }
 
-void App::on_key(int key, int scanCode, int action, int mods) {
+void App::on_key(int key, int scan_code, int action, int mods) {
 	for (auto &fn : _OnKeyVec) {
-		fn(key, scanCode, action, mods);
+		fn(key, scan_code, action, mods);
 	}
 }
 
@@ -288,9 +283,9 @@ void App::on_mouse_button(int button, int action, int mods) {
 	}
 }
 
-void App::on_scroll(double xOffset, double yOffset) {
+void App::on_scroll(double x_offset, double y_offset) {
 	for (auto &fn : _OnScrollVec) {
-		fn(xOffset, yOffset);
+		fn(x_offset, y_offset);
 	}
 }
 
@@ -301,7 +296,7 @@ void App::on_window_size(int width, int height) {
 }
 
 bool App::check_key_pressed(int key) const {
-	return glfwGetKey(_Window, key);
+	return glfwGetKey(_Window, key) == GLFW_PRESS;
 }
 
 }  // namespace gfxutils

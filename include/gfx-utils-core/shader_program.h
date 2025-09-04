@@ -32,7 +32,7 @@ public:
 
 		ShaderProgramBuilder &add_shader(const Shader &shader);
 
-		ShaderProgram _build() const;
+		[[nodiscard]] ShaderProgram _build() const;
 	};
 
 	void set_uniform(const std::string &name, int scalar);

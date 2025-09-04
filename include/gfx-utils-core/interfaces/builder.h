@@ -14,7 +14,7 @@ public:
 	    : _Name(name) {
 	}
 
-	std::string get_name() const { return _Name; }
+	[[nodiscard]] std::string get_name() const { return _Name; }
 
 	BuildTarget build() const {
 		return static_cast<const Derived *>(this)->_build();

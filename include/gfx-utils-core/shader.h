@@ -27,10 +27,10 @@ public:
 		ShaderBuilder &set_source(const std::string &shader_source);
 		ShaderBuilder &set_source_from_file(const std::string &source_file_path);
 
-		Shader _build() const;
+		[[nodiscard]] Shader _build() const;
 	};
 
-	GLuint _get_handle() const;
+	[[nodiscard]] GLuint _get_handle() const;
 };
 
 }  // namespace gfxutils

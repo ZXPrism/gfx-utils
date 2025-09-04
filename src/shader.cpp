@@ -45,8 +45,8 @@ Shader Shader::ShaderBuilder::_build() const {
 		return res;
 	}
 
-	GLuint *raw_shader_handle = new GLuint(0);
-	res._ShaderHandle = std::shared_ptr<GLuint>(raw_shader_handle, [](GLuint *ptr) {
+	auto *raw_shader_handle = new GLuint(0);
+	res._ShaderHandle = std::shared_ptr<GLuint>(raw_shader_handle, [](const GLuint *ptr) {
 		glDeleteShader(*ptr);
 		delete ptr;
 	});
@@ -72,10 +72,10 @@ Shader Shader::ShaderBuilder::_build() const {
 
 	GLint compile_status;
 	glGetShaderiv(*res._ShaderHandle, GL_COMPILE_STATUS, &compile_status);
-	if (!compile_status) {
-		static char compile_log[1024];
-		glGetShaderInfoLog(*res._ShaderHandle, sizeof(compile_log), nullptr, compile_log);
-		g_logger->warn("Shader::ShaderBuilder ({}): shader compilation failed:\n{}", _Name, compile_log);
+	if (compile_status == 0) {
+		static std::array<char, 1024> compile_log;
+		glGetShaderInfoLog(*res._ShaderHandle, sizeof(compile_log), nullptr, compile_log.data());
+		g_logger->warn("Shader::ShaderBuilder ({}): shader compilation failed:\n{}", _Name, compile_log.data());
 		return res;
 	}
 

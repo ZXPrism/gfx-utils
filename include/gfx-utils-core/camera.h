@@ -18,9 +18,9 @@ private:
 public:
 	Camera();
 
-	const glm::vec3 &get_pos() const;
-	const glm::mat4 &get_view() const;
-	const glm::mat4 &get_projection() const;
+	[[nodiscard]] const glm::vec3 &get_pos() const;
+	[[nodiscard]] const glm::mat4 &get_view() const;
+	[[nodiscard]] const glm::mat4 &get_projection() const;
 
 	void update(float delta_time);
 
