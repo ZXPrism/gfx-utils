@@ -12,7 +12,6 @@
 #include <filesystem>
 #include <format>
 #include <fstream>
-#include <unordered_map>
 
 constexpr int WINDOW_WIDTH = 800;
 constexpr int WINDOW_HEIGHT = 600;
@@ -21,9 +20,42 @@ constexpr const char *CONFIG_FILE_PATH = "assets/post_processing/config.json";
 constexpr const char *SHADER_ROOT_PATH = "assets/post_processing/shader";
 constexpr const char *INPUT_TEXTURE_FOLDER = "assets/post_processing/input_image";
 
-int main() {
-	using namespace gfxutils;
+using namespace gfxutils;
 
+VertexBuffer g_quad_vertex_buffer;
+
+class PostProcessingStage {
+private:
+	std::string _EffectName;
+	std::vector<ShaderProgram> _ShaderProgramVec;
+	std::vector<RenderPass> _RenderPassVec;
+	std::vector<Texture> _RenderTargetVec;
+
+public:
+	const Texture &execute(const Texture &input) {
+		RenderPassConfig render_pass_config;
+		render_pass_config._EnableDepthTest = false;
+		render_pass_config._EnableSRGB = false;
+
+		for (size_t i = 0; const auto &render_pass : _RenderPassVec) {
+			auto &shader_program = _ShaderProgramVec[i];
+			render_pass.use(render_pass_config, [&]() {
+				g_quad_vertex_buffer.use();
+				shader_program.use();
+				shader_program.set_uniform("input_texture_sampler", 0);
+				input.use(0);
+
+				glDrawArrays(GL_TRIANGLES, 0, 6);
+			});
+
+			++i;
+		}
+
+		return _RenderTargetVec.back();
+	}
+};
+
+int main() {
 	auto &app = App::instance();
 	app.init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
 	app.set_flag_vsync(true);
@@ -74,13 +106,18 @@ int main() {
 		std::string fx_name = aa_effects_node["fx_name"].asString();
 		auto &render_passes_node = aa_effects_node["render_passes"];
 
-		fx_name_vec_aa.push_back(fx_name);
-
 		g_logger->info("loading AA effect '{}' with {} render pass(s)", fx_name, render_passes_node.size());
+
+		if (render_passes_node.empty()) {
+			g_logger->error("effect must contain at least 1 render pass!");
+			return -1;
+		}
+
+		fx_name_vec_aa.push_back(fx_name);
 
 		for (auto &render_pass_node : render_passes_node) {
 			std::string pass_name = render_pass_node["pass_name"].asString();
-			g_logger->info("loading render pass {}", pass_name);
+			g_logger->info("loading render pass '{}'", pass_name);
 
 			// prepare shaders
 			std::string vs_path = render_pass_node["vs_path"].asString();
@@ -110,10 +147,10 @@ int main() {
 	auto default_pass = RenderPass::RenderPassBuilder("default_pass").build();
 
 	// prepare vertices
-	auto quad_vertex_buffer = VertexBuffer::VertexBufferBuilder("fullscreen_quad", g_screen_quad_vertices)
-	                              .add_attribute(2)  // position (vec2)
-	                              .add_attribute(2)  // texture coordinates (vec2)
-	                              .build();
+	g_quad_vertex_buffer = VertexBuffer::VertexBufferBuilder("fullscreen_quad", g_screen_quad_vertices)
+	                           .add_attribute(2)  // position (vec2)
+	                           .add_attribute(2)  // texture coordinates (vec2)
+	                           .build();
 
 	RenderPassConfig render_pass_config;
 	render_pass_config._EnableDepthTest = false;
@@ -197,8 +234,12 @@ int main() {
 				ImGui::RadioButton("Enhancement", &curr_selected_mode, 1);
 
 				if (curr_selected_mode == 0) {
+					curr_selected_aa = 0;
+					curr_selected_sharpening = 0;
 					// ImGui::Combo("Stylistic", &current_selected_style, style_options, static_cast<int>(sizeof(style_options) / sizeof(const char *)));
 				} else {
+					curr_selected_style = 0;
+
 					std::vector<const char *> aa_options;
 					aa_options.push_back("(none)");
 					for (const auto &aa_names : fx_name_vec_aa) {
@@ -216,7 +257,7 @@ int main() {
 			for (size_t i = 0; const auto &render_pass : fx_render_pass_vec_aa[fx_id]) {
 				auto &shader_program = fx_shader_vec_aa[fx_id][i];
 				render_pass.use(render_pass_config, [&]() {
-					quad_vertex_buffer.use();
+					g_quad_vertex_buffer.use();
 					shader_program.use();
 					shader_program.set_uniform("input_texture_sampler", 0);
 
@@ -236,7 +277,7 @@ int main() {
 		}
 
 		default_pass.use(render_pass_config, [&]() {
-			quad_vertex_buffer.use();
+			g_quad_vertex_buffer.use();
 			default_pass_shader_program.use();
 
 			// if no style, AA or sharpening, directly use the input image
