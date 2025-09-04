@@ -119,7 +119,7 @@ Texture Texture::TextureBuilder::_build() const {
 	return res;
 }
 
-void Texture::use(size_t texture_unit) {
+void Texture::use(size_t texture_unit) const {
 	glActiveTexture(static_cast<GLenum>(GL_TEXTURE0 + texture_unit));
 	glBindTexture(GL_TEXTURE_2D, *_TextureHandle);
 }

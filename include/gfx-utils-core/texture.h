@@ -54,7 +54,7 @@ public:
 		Texture _build() const;
 	};
 
-	void use(size_t texture_unit);
+	void use(size_t texture_unit) const;
 
 	GLuint _get_handle() const;
 	void _export_to_file(const std::string &file_path) const;
