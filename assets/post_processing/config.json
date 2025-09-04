@@ -1,0 +1,18 @@
+{
+    "stylistic": [
+        {}
+    ],
+    "aa": [
+        {
+            "fx_name": "Box Filter",
+            "render_passes": [
+                {
+                    "pass_name": "default_pass",
+                    "vs_path": "default.vert",
+                    "fs_path": "pp_box_filter.frag"
+                }
+            ]
+        }
+    ],
+    "sharpening": []
+}

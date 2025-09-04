@@ -8,12 +8,18 @@
 #include <glad/glad.h>
 #include <imgui.h>
 
+#include <json/json.h>
 #include <filesystem>
 #include <format>
+#include <fstream>
+#include <unordered_map>
 
 constexpr int WINDOW_WIDTH = 800;
 constexpr int WINDOW_HEIGHT = 600;
 constexpr const char *WINDOW_TITLE = "Example: post_processing";
+constexpr const char *CONFIG_FILE_PATH = "assets/post_processing/config.json";
+constexpr const char *SHADER_ROOT_PATH = "assets/post_processing/shader";
+constexpr const char *INPUT_TEXTURE_FOLDER = "assets/post_processing/input_image";
 
 int main() {
 	using namespace gfxutils;
@@ -23,18 +29,18 @@ int main() {
 	app.set_flag_vsync(true);
 	app.set_clear_color({ 0.341f, 0.808f, 0.980f });
 
-	auto load_shader = [](const std::string &pass_name, const std::string &shader_file_name) {
-		ShaderProgram::ShaderProgramBuilder shader_program_builder(std::format("{}_pass_shader_program", pass_name));
-		Shader::ShaderBuilder vs_builder(std::format("{}_pass_vs", pass_name));
+	auto load_shader = [](const std::string &pass_name, const std::string &vs_path, const std::string &fs_path) {
+		ShaderProgram::ShaderProgramBuilder shader_program_builder(std::format("{}_shader_program", pass_name));
+		Shader::ShaderBuilder vs_builder(std::format("{}_vs", pass_name));
 		auto vertex_shader = vs_builder
 		                         .set_type(ShaderType::VERTEX_SHADER)
-		                         .set_source_from_file(std::format("assets/post_processing/{}.vert", shader_file_name))
+		                         .set_source_from_file(std::format("{}/{}", SHADER_ROOT_PATH, vs_path))
 		                         .build();
 
-		Shader::ShaderBuilder fs_builder(std::format("{}_pass_fs", pass_name));
+		Shader::ShaderBuilder fs_builder(std::format("{}_fs", pass_name));
 		auto fragment_shader = fs_builder
 		                           .set_type(ShaderType::FRAGMENT_SHADER)
-		                           .set_source_from_file(std::format("assets/post_processing/{}.frag", shader_file_name))
+		                           .set_source_from_file(std::format("{}/{}", SHADER_ROOT_PATH, fs_path))
 		                           .build();
 
 		shader_program_builder.add_shader(vertex_shader).add_shader(fragment_shader);
@@ -47,20 +53,60 @@ int main() {
 		return shader_program;
 	};
 
-	// prepare shaders
-	auto pp_pass_shader_program = load_shader("pp", "pp_box_filter");
-	auto default_pass_shader_program = load_shader("default", "default");
+	// load config file
+	std::ifstream config_file_in(CONFIG_FILE_PATH);
+	if (!config_file_in) {
+		g_logger->error("config file does not exist");
+		return -1;
+	}
+	Json::Value config_root;
+	config_file_in >> config_root;
+	config_file_in.close();
 
-	// prepare textures (attachments)
-	auto albedo = Texture::TextureBuilder("albedo")
-	                  .set_size(WINDOW_WIDTH, WINDOW_HEIGHT)
-	                  .set_format(GL_RGBA32F)
-	                  .build();
+	// load AA effects
+	std::vector<std::string> fx_name_vec_aa;
+	std::vector<std::vector<ShaderProgram>> fx_shader_vec_aa;
+	std::vector<std::vector<RenderPass>> fx_render_pass_vec_aa;
+	std::vector<Texture> fx_render_target_vec_aa;
 
-	// prepare render passes
-	auto pp_pass = RenderPass::RenderPassBuilder("pp_pass")
-	                   .add_color_attachment(albedo, false)
-	                   .build();
+	auto &aa_root_node = config_root["aa"];
+	for (auto &aa_effects_node : aa_root_node) {
+		std::string fx_name = aa_effects_node["fx_name"].asString();
+		auto &render_passes_node = aa_effects_node["render_passes"];
+
+		fx_name_vec_aa.push_back(fx_name);
+
+		g_logger->info("loading AA effect '{}' with {} render pass(s)", fx_name, render_passes_node.size());
+
+		for (auto &render_pass_node : render_passes_node) {
+			std::string pass_name = render_pass_node["pass_name"].asString();
+			g_logger->info("loading render pass {}", pass_name);
+
+			// prepare shaders
+			std::string vs_path = render_pass_node["vs_path"].asString();
+			std::string fs_path = render_pass_node["fs_path"].asString();
+			auto shader_program = load_shader(pass_name, vs_path, fs_path);
+
+			auto &shader_vec = fx_shader_vec_aa.emplace_back();
+			shader_vec.push_back(shader_program);
+
+			// prepare render passes
+			auto render_target = Texture::TextureBuilder("color")
+			                         .set_size(WINDOW_WIDTH, WINDOW_HEIGHT)
+			                         .set_format(GL_RGBA32F)
+			                         .build();
+			auto render_pass = RenderPass::RenderPassBuilder(pass_name)
+			                       .add_color_attachment(render_target, false)
+			                       .build();
+
+			fx_render_target_vec_aa.push_back(render_target);
+			auto &render_pass_vec = fx_render_pass_vec_aa.emplace_back();
+			render_pass_vec.push_back(render_pass);
+		}
+	}
+
+	// prepare default resources (final pass)
+	auto default_pass_shader_program = load_shader("default_pass", "default.vert", "default.frag");
 	auto default_pass = RenderPass::RenderPassBuilder("default_pass").build();
 
 	// prepare vertices
@@ -75,15 +121,14 @@ int main() {
 
 	// detect images under assets/post_processing/input_image folder
 	int curr_selected_texture = 0;
-	const char *input_texture_folder = "assets/post_processing/input_image";
 	std::vector<Texture> input_texture_vec;
 	std::vector<std::string> input_texture_names;
 
 	namespace fs = std::filesystem;
-	if (!fs::exists(input_texture_folder) || !fs::is_directory(input_texture_folder)) {
+	if (!fs::exists(INPUT_TEXTURE_FOLDER) || !fs::is_directory(INPUT_TEXTURE_FOLDER)) {
 		g_logger->warn("input texture folder doesn't exist!");
 	} else {
-		for (const auto &entry : fs::directory_iterator(input_texture_folder)) {
+		for (const auto &entry : fs::directory_iterator(INPUT_TEXTURE_FOLDER)) {
 			if (!entry.is_regular_file()) {
 				continue;
 			}
@@ -107,20 +152,30 @@ int main() {
 	}
 
 	// style
-	int current_selected_style = 0;
-	const char *style_options[] = { "Sobel", "Laplcian" };
+	int curr_selected_style = 0;
 
 	// AA
-	int current_selected_AA = 0;
-	const char *aa_options[] = { "None", "Box Filter" };
+	int curr_selected_aa = 0;
 
 	// sharpening
-	int current_selected_sharpening = 0;
-	const char *sharpening_options[] = { "None", "Unsharp Masking" };
+	int curr_selected_sharpening = 0;
 
 	app.run([&](float dt [[maybe_unused]]) {
 		ImGui::Begin("Control");
 		{
+			// export button
+			if (curr_selected_style == 0 && curr_selected_aa == 0 && curr_selected_sharpening == 0) {
+				if (!input_texture_vec.empty()) {
+					if (ImGui::Button("export framebuffer")) {
+						input_texture_vec[curr_selected_texture].export_to_file("output.png");
+					}
+				}
+			} else {
+				if (ImGui::Button("export framebuffer")) {
+					fx_render_target_vec_aa[curr_selected_aa - 1].export_to_file("output.png");
+				}
+			}
+
 			// input image selection
 			{
 				std::vector<const char *> image_options;
@@ -136,38 +191,63 @@ int main() {
 
 			// mode selection (stylistic / enhancement)
 			{
-				static int current_selected_mode = 0;
-				static const char *mode_options[] = { "Stylistic", "Enhancement" };
-				ImGui::Combo("Mode", &current_selected_mode, mode_options, 2);
+				static int curr_selected_mode = 0;
+				ImGui::RadioButton("Stylistic", &curr_selected_mode, 0);
+				ImGui::SameLine();
+				ImGui::RadioButton("Enhancement", &curr_selected_mode, 1);
 
-				if (current_selected_mode == 0) {
-					ImGui::Combo("Style", &current_selected_style, style_options, static_cast<int>(sizeof(style_options) / sizeof(const char *)));
+				if (curr_selected_mode == 0) {
+					// ImGui::Combo("Stylistic", &current_selected_style, style_options, static_cast<int>(sizeof(style_options) / sizeof(const char *)));
 				} else {
-					ImGui::Combo("AA", &current_selected_AA, aa_options, static_cast<int>(sizeof(aa_options) / sizeof(const char *)));
-					ImGui::Combo("Sharpening", &current_selected_sharpening, sharpening_options, static_cast<int>(sizeof(sharpening_options) / sizeof(const char *)));
+					std::vector<const char *> aa_options;
+					aa_options.push_back("(none)");
+					for (const auto &aa_names : fx_name_vec_aa) {
+						aa_options.push_back(aa_names.c_str());
+					}
+					ImGui::Combo("AA", &curr_selected_aa, aa_options.data(), static_cast<int>(aa_options.size()));
+					//  ImGui::Combo("Sharpening", &current_selected_sharpening, sharpening_options, static_cast<int>(sizeof(sharpening_options) / sizeof(const char *)));
 				}
 			}
 		}
 		ImGui::End();
 
-		pp_pass.use(render_pass_config, [&]() {
-			quad_vertex_buffer.use();
-			pp_pass_shader_program.use();
+		if (curr_selected_aa != 0) {
+			size_t fx_id = curr_selected_aa - 1;
+			for (size_t i = 0; const auto &render_pass : fx_render_pass_vec_aa[fx_id]) {
+				auto &shader_program = fx_shader_vec_aa[fx_id][i];
+				render_pass.use(render_pass_config, [&]() {
+					quad_vertex_buffer.use();
+					shader_program.use();
+					shader_program.set_uniform("input_texture_sampler", 0);
 
-			if (!input_texture_vec.empty()) {
-				input_texture_vec[curr_selected_texture].use(0);
-				pp_pass_shader_program.set_uniform("input_texture_sampler", 0);
+					if (i == 0) {
+						if (!input_texture_vec.empty()) {
+							input_texture_vec[curr_selected_texture].use(0);
+						}
+					} else {
+						fx_render_target_vec_aa[i].use(0);
+					}
+
+					glDrawArrays(GL_TRIANGLES, 0, 6);
+				});
+
+				++i;
 			}
-
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-		});
+		}
 
 		default_pass.use(render_pass_config, [&]() {
 			quad_vertex_buffer.use();
 			default_pass_shader_program.use();
 
-			albedo.use(0);
-			default_pass_shader_program.set_uniform("albedo_sampler", 0);
+			// if no style, AA or sharpening, directly use the input image
+			if (curr_selected_style == 0 && curr_selected_aa == 0 && curr_selected_sharpening == 0) {
+				if (!input_texture_vec.empty()) {
+					input_texture_vec[curr_selected_texture].use(0);
+				}
+			} else {  // otherwise, use previous output texture (for simplicity, currently only use AA)
+				fx_render_target_vec_aa[curr_selected_aa - 1].use(0);
+			}
+			default_pass_shader_program.set_uniform("input_texture_sampler", 0);
 
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		});
