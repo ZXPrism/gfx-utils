@@ -18,6 +18,7 @@ enum class ShaderDataType {
 	MAT2,
 	MAT3,
 	MAT4,
+	SAMPLER_2D
 };
 
 }  // namespace gfxutils

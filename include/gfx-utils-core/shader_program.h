@@ -9,6 +9,7 @@
 #include <gfx-utils-core/interfaces/builder.h>
 #include <gfx-utils-core/shader.h>
 #include <gfx-utils-core/shader_types.h>
+#include <gfx-utils-core/uniform_info.h>
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
@@ -19,6 +20,7 @@ class ShaderProgram : public IBuildTarget<ShaderProgram> {
 private:
 	std::shared_ptr<GLuint> _Program;
 	std::unordered_map<std::string, GLint> _MapUniformNameToLocation;
+	std::vector<UniformInfo> _UniformInfoVec;
 
 public:
 	class ShaderProgramBuilder : public IBuilder<ShaderProgramBuilder, ShaderProgram> {
@@ -39,6 +41,7 @@ public:
 	void set_uniform(const std::string &name, const glm::vec2 &vector);
 	void set_uniform(const std::string &name, const glm::vec3 &vector);
 	GLint get_uniform_location(const std::string &name);
+	std::vector<UniformInfo> get_all_uniform_info() const;
 
 	void use() const;
 };
