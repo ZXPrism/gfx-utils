@@ -1,8 +1,11 @@
 #include <gfx-utils-core/shader.h>
 
+#include <gfx-utils-core/config.h>
 #include <gfx-utils-core/logger.h>
 
+#include <format>
 #include <fstream>
+#include <regex>
 #include <sstream>
 
 namespace gfxutils {
@@ -66,8 +69,30 @@ Shader Shader::ShaderBuilder::_build() const {
 		return res;
 	}
 
-	const char *const shader_src = _Source.c_str();
-	glShaderSource(*res._ShaderHandle, 1, &shader_src, nullptr);
+	// override shader GLSL version
+	std::string shader_src;
+	std::regex glsl_version_pattern(R"(#version\s+(\d+)\s+core)");
+	std::smatch glsl_version_match;
+	if (std::regex_search(_Source, glsl_version_match, glsl_version_pattern)) {
+		int actual_glsl_version = std::stoi(glsl_version_match[1].str());
+		int config_glsl_version = std::stoi(std::format("{}{}0", config::opengl_ver_major, config::opengl_ver_minor));
+
+		g_logger->info("Shader::ShaderBuilder ({}): detected GLSL version: '{}'", _Name, actual_glsl_version);
+
+		if (config_glsl_version < actual_glsl_version) {
+			g_logger->warn("Shader::ShaderBuilder ({}): config GLSL version '{}' is lower than actual requested GLSL version '{}'",
+			               _Name,
+			               config_glsl_version,
+			               actual_glsl_version);
+			g_logger->warn("Shader::ShaderBuilder ({}): for compatibility, the actual requested GLSL version is lowered to the config one; shader may not work correctly", _Name);
+
+			std::string new_version = std::format("#version {} core", config_glsl_version);
+			shader_src = std::regex_replace(_Source, glsl_version_pattern, new_version, std::regex_constants::format_first_only);
+		}
+	}
+
+	const char *const shader_src_cstr = _Source.c_str();
+	glShaderSource(*res._ShaderHandle, 1, &shader_src_cstr, nullptr);
 	glCompileShader(*res._ShaderHandle);
 
 	GLint compile_status;

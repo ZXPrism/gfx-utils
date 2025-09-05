@@ -193,7 +193,7 @@ void App::_init_IMGUI() {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGui_ImplGlfw_InitForOpenGL(_Window, true);
-	ImGui_ImplOpenGL3_Init(config::glsl_ver);
+	ImGui_ImplOpenGL3_Init(std::format("#version {}{}0", config::opengl_ver_major, config::opengl_ver_minor).c_str());
 	ImGui::StyleColorsDark();
 }
 
