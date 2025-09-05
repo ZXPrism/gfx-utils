@@ -207,9 +207,12 @@ int main() {
 			if (ImGui::CollapsingHeader(shader_program.get_name().c_str())) {
 				shader_program.use();
 
+				bool has_uniform = false;
 				auto uniform_info_vec = shader_program.get_all_uniform_info();
 				for (auto &uniform_info : uniform_info_vec) {
 					if (!uniform_name_exclude_set.contains(uniform_info._Name)) {
+						has_uniform = true;
+
 						const char *label = uniform_info._Name.c_str();
 
 						switch (uniform_info._Type) {
@@ -250,6 +253,10 @@ int main() {
 						}
 					}
 				}
+
+				if (!has_uniform) {
+					ImGui::Text("(no uniforms)");
+				}
 			}
 		}
 	};
@@ -263,7 +270,7 @@ int main() {
 	// perf
 	constexpr int QUERY_FREQ = 10;
 	int frame_cnt = 0;  // read gpu query every `QUERY_FREQ` frames
-	float cpu_time_average = 0.0f;
+	float frame_time_average = 0.0f;
 	float gpu_time_average = 0.0f;
 	GLuint gpu_time_query;
 
@@ -285,8 +292,8 @@ int main() {
 				}
 			}
 
-			ImGui::Text("CPU time (average): %fs", cpu_time_average);
-			ImGui::Text("GPU time (average): %fms", gpu_time_average);
+			ImGui::Text("Frame time (avg): %fs", frame_time_average);
+			ImGui::Text("GPU time (avg): %fms", gpu_time_average);
 
 			ImGui::SeparatorText("Basics");
 
@@ -379,7 +386,7 @@ int main() {
 			++frame_cnt;
 		}
 
-		cpu_time_average = (cpu_time_average + dt) * 0.5f;
+		frame_time_average = (frame_time_average + dt) * 0.5f;
 	});
 
 	glDeleteQueries(1, &gpu_time_query);

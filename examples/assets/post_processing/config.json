@@ -6,7 +6,22 @@
                 {
                     "pass_name": "box_filter_default_pass",
                     "vs_path": "default.vert",
-                    "fs_path": "pp_box_filter.frag"
+                    "fs_path": "box_filter.frag"
+                }
+            ]
+        },
+        {
+            "fx_name": "Gaussian Filter",
+            "render_passes": [
+                {
+                    "pass_name": "gaussian_filter_pass_1",
+                    "vs_path": "default.vert",
+                    "fs_path": "gaussian_filter_1.frag"
+                },
+                {
+                    "pass_name": "gaussian_filter_pass_2",
+                    "vs_path": "default.vert",
+                    "fs_path": "gaussian_filter_2.frag"
                 }
             ]
         }
@@ -18,7 +33,17 @@
                 {
                     "pass_name": "usm_box_filter_default_pass",
                     "vs_path": "default.vert",
-                    "fs_path": "pp_usm_box_filter.frag"
+                    "fs_path": "usm_box_filter.frag"
+                }
+            ]
+        },
+        {
+            "fx_name": "Sobel",
+            "render_passes": [
+                {
+                    "pass_name": "sobel_default_pass",
+                    "vs_path": "default.vert",
+                    "fs_path": "sobel.frag"
                 }
             ]
         }
