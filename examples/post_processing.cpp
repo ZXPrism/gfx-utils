@@ -124,7 +124,7 @@ int main() {
 				fx._ShaderProgramVec.push_back(shader_program);
 
 				// prepare render passes
-				auto render_target = Texture::TextureBuilder("color")
+				auto render_target = Texture::TextureBuilder(std::format("{}/color", pass_name))
 				                         .set_size(WINDOW_WIDTH, WINDOW_HEIGHT)
 				                         .set_format(GL_RGBA32F)
 				                         .build();
@@ -264,14 +264,22 @@ int main() {
 		ImGui::Begin("Control");
 		{
 			ImGui::SeparatorText("Profiling");
-			// export button
-			if (curr_selected_aa == 0 && curr_selected_sharpening == 0) {
+
+			// export buttons
+			if (curr_selected_sharpening != 0 || curr_selected_aa != 0) {
 				if (ImGui::Button("export framebuffer")) {
-					input_texture_vec[curr_selected_texture].export_to_file("output.png");
+					if (curr_selected_sharpening != 0) {
+						size_t sharpening_id = curr_selected_sharpening - 1;
+						effect_sharpening_vec[sharpening_id]._RenderTargetVec.back().export_to_file("output.png");
+					} else if (curr_selected_aa != 0) {
+						size_t aa_id = curr_selected_aa - 1;
+						effect_aa_vec[aa_id]._RenderTargetVec.back().export_to_file("output.png");
+					}
 				}
-			} else {
-				if (ImGui::Button("export framebuffer")) {
-					effect_aa_vec[curr_selected_aa - 1]._RenderTargetVec.back().export_to_file("output.png");
+
+				ImGui::SameLine();
+
+				if (ImGui::Button("export profiling log")) {
 				}
 			}
 

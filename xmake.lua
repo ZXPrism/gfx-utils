@@ -45,7 +45,7 @@ function add_example(example_name, extra_pkgs)
 
         after_build(function (target)
             os.cp(target:targetfile(), "bin/examples/")
-            os.cp("assets", "bin/examples/")
+            os.cp("examples/assets", "bin/examples/")
         end)
     target_end()
 end
