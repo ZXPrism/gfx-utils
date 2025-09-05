@@ -58,7 +58,7 @@ struct PostProcessingStage {
 int main() {
 	auto &app = App::instance();
 	app.init(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
-	app.set_flag_vsync(true);
+	app.set_flag_vsync(false);
 	app.set_clear_color({ 0.341f, 0.808f, 0.980f });
 
 	auto load_shader = [](const std::string &pass_name, const std::string &vs_path, const std::string &fs_path) {
@@ -260,7 +260,14 @@ int main() {
 	// sharpening
 	int curr_selected_sharpening = 0;
 
-	app.run([&](float dt [[maybe_unused]]) {
+	// perf
+	constexpr int QUERY_FREQ = 10;
+	int frame_cnt = 0;  // read gpu query every `QUERY_FREQ` frames
+	float cpu_time_average = 0.0f;
+	float gpu_time_average = 0.0f;
+	GLuint gpu_time_query;
+
+	app.run([&](float dt) {
 		ImGui::Begin("Control");
 		{
 			ImGui::SeparatorText("Profiling");
@@ -276,12 +283,10 @@ int main() {
 						effect_aa_vec[aa_id]._RenderTargetVec.back().export_to_file("output.png");
 					}
 				}
-
-				ImGui::SameLine();
-
-				if (ImGui::Button("export profiling log")) {
-				}
 			}
+
+			ImGui::Text("CPU time (average): %fs", cpu_time_average);
+			ImGui::Text("GPU time (average): %fms", gpu_time_average);
 
 			ImGui::SeparatorText("Basics");
 
@@ -313,6 +318,12 @@ int main() {
 		}
 
 		ImGui::SeparatorText("Shader Configs");
+
+		// gpu time measurement start
+		if (frame_cnt == 0) {
+			glGenQueries(1, &gpu_time_query);
+			glBeginQuery(GL_TIME_ELAPSED, gpu_time_query);
+		}
 
 		if (curr_selected_aa != 0) {
 			size_t aa_id = curr_selected_aa - 1;
@@ -352,7 +363,26 @@ int main() {
 
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		});
+
+		if (frame_cnt == 0) {
+			glEndQuery(GL_TIME_ELAPSED);
+		}
+
+		// gpu time measurement end
+		if (frame_cnt == QUERY_FREQ) {
+			GLuint64 result = 0;
+			glGetQueryObjectui64v(gpu_time_query, GL_QUERY_RESULT, &result);
+			gpu_time_average = (gpu_time_average + static_cast<float>(result) / 1e6f) * 0.5f;
+
+			frame_cnt = 0;
+		} else {
+			++frame_cnt;
+		}
+
+		cpu_time_average = (cpu_time_average + dt) * 0.5f;
 	});
+
+	glDeleteQueries(1, &gpu_time_query);
 
 	app.shutdown();
 
