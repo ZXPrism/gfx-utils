@@ -3,7 +3,7 @@
 #include <gfx-utils-core/app.h>
 #include <gfx-utils-core/config.h>
 
-#include <glfw/glfw3.h>
+#include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <algorithm>
