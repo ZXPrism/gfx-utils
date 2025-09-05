@@ -6,12 +6,14 @@
 #include <gfx-utils-core/vertices.h>
 
 #include <glad/glad.h>
+#include <glm/gtc/type_ptr.hpp>
 #include <imgui.h>
 
 #include <json/json.h>
 #include <filesystem>
 #include <format>
 #include <fstream>
+#include <unordered_set>
 
 constexpr int WINDOW_WIDTH = 800;
 constexpr int WINDOW_HEIGHT = 600;
@@ -24,14 +26,12 @@ using namespace gfxutils;
 
 VertexBuffer g_quad_vertex_buffer;
 
-class PostProcessingStage {
-private:
+struct PostProcessingStage {
 	std::string _EffectName;
 	std::vector<ShaderProgram> _ShaderProgramVec;
 	std::vector<RenderPass> _RenderPassVec;
 	std::vector<Texture> _RenderTargetVec;
 
-public:
 	const Texture &execute(const Texture &input) {
 		RenderPassConfig render_pass_config;
 		render_pass_config._EnableDepthTest = false;
@@ -42,7 +42,7 @@ public:
 			render_pass.use(render_pass_config, [&]() {
 				g_quad_vertex_buffer.use();
 				shader_program.use();
-				shader_program.set_uniform("input_texture_sampler", 0);
+				shader_program.set_uniform("u_input_texture_sampler", 0);
 				input.use(0);
 
 				glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -79,7 +79,7 @@ int main() {
 
 		auto shader_program = shader_program_builder.build();
 		shader_program.use();
-		shader_program.set_uniform("window_size",
+		shader_program.set_uniform("u_window_size",
 		                           glm::vec2(static_cast<float>(WINDOW_WIDTH), static_cast<float>(WINDOW_HEIGHT)));
 
 		return shader_program;
@@ -95,51 +95,62 @@ int main() {
 	config_file_in >> config_root;
 	config_file_in.close();
 
+	auto load_effects = [&](std::vector<PostProcessingStage> &effect_vec, const std::string &type) -> bool {
+		auto &root_node = config_root[type];
+		for (auto &effect_node : root_node) {
+			PostProcessingStage fx;
+
+			std::string fx_name = effect_node["fx_name"].asString();
+			auto &render_passes_node = effect_node["render_passes"];
+
+			g_logger->info("loading {} effect '{}' with {} render pass(s)", type, fx_name, render_passes_node.size());
+
+			if (render_passes_node.empty()) {
+				g_logger->error("effect must contain at least 1 render pass!");
+				return false;
+			}
+
+			fx._EffectName = fx_name;
+
+			for (auto &render_pass_node : render_passes_node) {
+				std::string pass_name = render_pass_node["pass_name"].asString();
+				g_logger->info("loading render pass '{}'", pass_name);
+
+				// prepare shaders
+				std::string vs_path = render_pass_node["vs_path"].asString();
+				std::string fs_path = render_pass_node["fs_path"].asString();
+				auto shader_program = load_shader(pass_name, vs_path, fs_path);
+
+				fx._ShaderProgramVec.push_back(shader_program);
+
+				// prepare render passes
+				auto render_target = Texture::TextureBuilder("color")
+				                         .set_size(WINDOW_WIDTH, WINDOW_HEIGHT)
+				                         .set_format(GL_RGBA32F)
+				                         .build();
+				auto render_pass = RenderPass::RenderPassBuilder(pass_name)
+				                       .add_color_attachment(render_target, false)
+				                       .build();
+
+				fx._RenderTargetVec.push_back(render_target);
+				fx._RenderPassVec.push_back(render_pass);
+			}
+
+			effect_vec.push_back(fx);
+		}
+		return true;
+	};
+
 	// load AA effects
-	std::vector<std::string> fx_name_vec_aa;
-	std::vector<std::vector<ShaderProgram>> fx_shader_vec_aa;
-	std::vector<std::vector<RenderPass>> fx_render_pass_vec_aa;
-	std::vector<Texture> fx_render_target_vec_aa;
+	std::vector<PostProcessingStage> effect_aa_vec;
+	if (!load_effects(effect_aa_vec, "aa")) {
+		return -1;
+	}
 
-	auto &aa_root_node = config_root["aa"];
-	for (auto &aa_effects_node : aa_root_node) {
-		std::string fx_name = aa_effects_node["fx_name"].asString();
-		auto &render_passes_node = aa_effects_node["render_passes"];
-
-		g_logger->info("loading AA effect '{}' with {} render pass(s)", fx_name, render_passes_node.size());
-
-		if (render_passes_node.empty()) {
-			g_logger->error("effect must contain at least 1 render pass!");
-			return -1;
-		}
-
-		fx_name_vec_aa.push_back(fx_name);
-
-		for (auto &render_pass_node : render_passes_node) {
-			std::string pass_name = render_pass_node["pass_name"].asString();
-			g_logger->info("loading render pass '{}'", pass_name);
-
-			// prepare shaders
-			std::string vs_path = render_pass_node["vs_path"].asString();
-			std::string fs_path = render_pass_node["fs_path"].asString();
-			auto shader_program = load_shader(pass_name, vs_path, fs_path);
-
-			auto &shader_vec = fx_shader_vec_aa.emplace_back();
-			shader_vec.push_back(shader_program);
-
-			// prepare render passes
-			auto render_target = Texture::TextureBuilder("color")
-			                         .set_size(WINDOW_WIDTH, WINDOW_HEIGHT)
-			                         .set_format(GL_RGBA32F)
-			                         .build();
-			auto render_pass = RenderPass::RenderPassBuilder(pass_name)
-			                       .add_color_attachment(render_target, false)
-			                       .build();
-
-			fx_render_target_vec_aa.push_back(render_target);
-			auto &render_pass_vec = fx_render_pass_vec_aa.emplace_back();
-			render_pass_vec.push_back(render_pass);
-		}
+	// load sharpening effects
+	std::vector<PostProcessingStage> effect_sharpening_vec;
+	if (!load_effects(effect_sharpening_vec, "sharpening")) {
+		return -1;
 	}
 
 	// prepare default resources (final pass)
@@ -157,13 +168,14 @@ int main() {
 	render_pass_config._EnableSRGB = false;
 
 	// detect images under assets/post_processing/input_image folder
+	// here we guarantee at least one image is available, or the program aborts
 	int curr_selected_texture = 0;
 	std::vector<Texture> input_texture_vec;
 	std::vector<std::string> input_texture_names;
 
 	namespace fs = std::filesystem;
-	if (!fs::exists(INPUT_TEXTURE_FOLDER) || !fs::is_directory(INPUT_TEXTURE_FOLDER)) {
-		g_logger->warn("input texture folder doesn't exist!");
+	if (!fs::exists(INPUT_TEXTURE_FOLDER) || !fs::is_directory(INPUT_TEXTURE_FOLDER) || fs::is_empty(INPUT_TEXTURE_FOLDER)) {
+		g_logger->warn("input texture folder doesn't exist or empty!");
 	} else {
 		for (const auto &entry : fs::directory_iterator(INPUT_TEXTURE_FOLDER)) {
 			if (!entry.is_regular_file()) {
@@ -188,8 +200,59 @@ int main() {
 		}
 	}
 
-	// style
-	int curr_selected_style = 0;
+	// shader reflector utility function
+	auto reflect_shader = [](std::vector<ShaderProgram> &shader_program_vec) {
+		static std::unordered_set<std::string> uniform_name_exclude_set{ "u_input_texture_sampler", "u_window_size" };
+		for (auto &shader_program : shader_program_vec) {
+			if (ImGui::CollapsingHeader(shader_program.get_name().c_str())) {
+				shader_program.use();
+
+				auto uniform_info_vec = shader_program.get_all_uniform_info();
+				for (auto &uniform_info : uniform_info_vec) {
+					if (!uniform_name_exclude_set.contains(uniform_info._Name)) {
+						const char *label = uniform_info._Name.c_str();
+
+						switch (uniform_info._Type) {
+						case ShaderDataType::INT:
+							{
+								static int value = 0;
+								if (ImGui::InputInt(label, &value)) {
+									shader_program.set_uniform(uniform_info._Name, value);
+								}
+								break;
+							}
+						case ShaderDataType::FLOAT:
+							{
+								static float value = 0.0f;
+								if (ImGui::InputFloat(label, &value)) {
+									shader_program.set_uniform(uniform_info._Name, value);
+								}
+								break;
+							}
+						case ShaderDataType::VEC2:
+							{
+								static glm::vec2 value(0.0f);
+								if (ImGui::InputFloat2(label, glm::value_ptr(value))) {
+									shader_program.set_uniform(uniform_info._Name, value);
+								}
+								break;
+							}
+						case ShaderDataType::VEC3:
+							{
+								static glm::vec3 value(0.0f);
+								if (ImGui::InputFloat3(label, glm::value_ptr(value))) {
+									shader_program.set_uniform(uniform_info._Name, value);
+								}
+								break;
+							}
+						default:
+							break;
+						}
+					}
+				}
+			}
+		}
+	};
 
 	// AA
 	int curr_selected_aa = 0;
@@ -200,95 +263,84 @@ int main() {
 	app.run([&](float dt [[maybe_unused]]) {
 		ImGui::Begin("Control");
 		{
+			ImGui::SeparatorText("Profiling");
 			// export button
-			if (curr_selected_style == 0 && curr_selected_aa == 0 && curr_selected_sharpening == 0) {
-				if (!input_texture_vec.empty()) {
-					if (ImGui::Button("export framebuffer")) {
-						input_texture_vec[curr_selected_texture].export_to_file("output.png");
-					}
+			if (curr_selected_aa == 0 && curr_selected_sharpening == 0) {
+				if (ImGui::Button("export framebuffer")) {
+					input_texture_vec[curr_selected_texture].export_to_file("output.png");
 				}
 			} else {
 				if (ImGui::Button("export framebuffer")) {
-					fx_render_target_vec_aa[curr_selected_aa - 1].export_to_file("output.png");
+					effect_aa_vec[curr_selected_aa - 1]._RenderTargetVec.back().export_to_file("output.png");
 				}
 			}
+
+			ImGui::SeparatorText("Basics");
 
 			// input image selection
 			{
 				std::vector<const char *> image_options;
-				if (input_texture_vec.empty()) {
-					image_options.push_back("(no available images)");
-				} else {
-					for (const auto &name : input_texture_names) {
-						image_options.push_back(name.c_str());
-					}
+				for (const auto &name : input_texture_names) {
+					image_options.push_back(name.c_str());
 				}
 				ImGui::Combo("Input Image", &curr_selected_texture, image_options.data(), static_cast<int>(image_options.size()));
 			}
 
-			// mode selection (stylistic / enhancement)
+			// aa & sharpening selection
 			{
-				static int curr_selected_mode = 0;
-				ImGui::RadioButton("Stylistic", &curr_selected_mode, 0);
-				ImGui::SameLine();
-				ImGui::RadioButton("Enhancement", &curr_selected_mode, 1);
-
-				if (curr_selected_mode == 0) {
-					curr_selected_aa = 0;
-					curr_selected_sharpening = 0;
-					// ImGui::Combo("Stylistic", &current_selected_style, style_options, static_cast<int>(sizeof(style_options) / sizeof(const char *)));
-				} else {
-					curr_selected_style = 0;
-
-					std::vector<const char *> aa_options;
-					aa_options.push_back("(none)");
-					for (const auto &aa_names : fx_name_vec_aa) {
-						aa_options.push_back(aa_names.c_str());
-					}
-					ImGui::Combo("AA", &curr_selected_aa, aa_options.data(), static_cast<int>(aa_options.size()));
-					//  ImGui::Combo("Sharpening", &current_selected_sharpening, sharpening_options, static_cast<int>(sizeof(sharpening_options) / sizeof(const char *)));
+				std::vector<const char *> aa_options;
+				aa_options.push_back("(none)");
+				for (const auto &effect_aa : effect_aa_vec) {
+					aa_options.push_back(effect_aa._EffectName.c_str());
 				}
+				ImGui::Combo("AA", &curr_selected_aa, aa_options.data(), static_cast<int>(aa_options.size()));
+
+				std::vector<const char *> sharpening_options;
+				sharpening_options.push_back("(none)");
+				for (const auto &effect_sharpening : effect_sharpening_vec) {
+					sharpening_options.push_back(effect_sharpening._EffectName.c_str());
+				}
+				ImGui::Combo("Sharpening", &curr_selected_sharpening, sharpening_options.data(), static_cast<int>(sharpening_options.size()));
 			}
 		}
-		ImGui::End();
+
+		ImGui::SeparatorText("Shader Configs");
 
 		if (curr_selected_aa != 0) {
-			size_t fx_id = curr_selected_aa - 1;
-			for (size_t i = 0; const auto &render_pass : fx_render_pass_vec_aa[fx_id]) {
-				auto &shader_program = fx_shader_vec_aa[fx_id][i];
-				render_pass.use(render_pass_config, [&]() {
-					g_quad_vertex_buffer.use();
-					shader_program.use();
-					shader_program.set_uniform("input_texture_sampler", 0);
+			size_t aa_id = curr_selected_aa - 1;
+			effect_aa_vec[aa_id].execute(input_texture_vec[curr_selected_texture]);
 
-					if (i == 0) {
-						if (!input_texture_vec.empty()) {
-							input_texture_vec[curr_selected_texture].use(0);
-						}
-					} else {
-						fx_render_target_vec_aa[i].use(0);
-					}
-
-					glDrawArrays(GL_TRIANGLES, 0, 6);
-				});
-
-				++i;
-			}
+			reflect_shader(effect_aa_vec[aa_id]._ShaderProgramVec);
 		}
+
+		if (curr_selected_sharpening != 0) {
+			size_t sharpening_id = curr_selected_sharpening - 1;
+			if (curr_selected_aa == 0) {
+				effect_sharpening_vec[sharpening_id].execute(input_texture_vec[curr_selected_texture]);
+			} else {
+				size_t aa_id = curr_selected_aa - 1;
+				effect_sharpening_vec[sharpening_id].execute(effect_aa_vec[aa_id]._RenderTargetVec.back());
+			}
+
+			reflect_shader(effect_sharpening_vec[sharpening_id]._ShaderProgramVec);
+		}
+
+		ImGui::End();
 
 		default_pass.use(render_pass_config, [&]() {
 			g_quad_vertex_buffer.use();
 			default_pass_shader_program.use();
 
-			// if no style, AA or sharpening, directly use the input image
-			if (curr_selected_style == 0 && curr_selected_aa == 0 && curr_selected_sharpening == 0) {
-				if (!input_texture_vec.empty()) {
-					input_texture_vec[curr_selected_texture].use(0);
-				}
-			} else {  // otherwise, use previous output texture (for simplicity, currently only use AA)
-				fx_render_target_vec_aa[curr_selected_aa - 1].use(0);
+			if (curr_selected_sharpening != 0) {
+				size_t sharpening_id = curr_selected_sharpening - 1;
+				effect_sharpening_vec[sharpening_id]._RenderTargetVec.back().use(0);
+			} else if (curr_selected_aa != 0) {
+				size_t aa_id = curr_selected_aa - 1;
+				effect_aa_vec[aa_id]._RenderTargetVec.back().use(0);
+			} else {
+				input_texture_vec[curr_selected_texture].use(0);
 			}
-			default_pass_shader_program.set_uniform("input_texture_sampler", 0);
+			default_pass_shader_program.set_uniform("u_input_texture_sampler", 0);
 
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		});
