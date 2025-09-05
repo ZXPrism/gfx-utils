@@ -70,7 +70,7 @@ Shader Shader::ShaderBuilder::_build() const {
 	}
 
 	// override shader GLSL version
-	std::string shader_src;
+	std::string shader_src = _Source;
 	std::regex glsl_version_pattern(R"(#version\s+(\d+)\s+core)");
 	std::smatch glsl_version_match;
 	if (std::regex_search(_Source, glsl_version_match, glsl_version_pattern)) {
@@ -91,7 +91,7 @@ Shader Shader::ShaderBuilder::_build() const {
 		}
 	}
 
-	const char *const shader_src_cstr = _Source.c_str();
+	const char *const shader_src_cstr = shader_src.c_str();
 	glShaderSource(*res._ShaderHandle, 1, &shader_src_cstr, nullptr);
 	glCompileShader(*res._ShaderHandle);
 
