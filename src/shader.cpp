@@ -2,6 +2,7 @@
 
 #include <gfx-utils-core/config.h>
 #include <gfx-utils-core/logger.h>
+#include <gfx-utils-core/resource_manager.h>
 
 #include <format>
 #include <fstream>
@@ -48,21 +49,15 @@ Shader Shader::ShaderBuilder::_build() const {
 		return res;
 	}
 
-	auto *raw_shader_handle = new GLuint(0);
-	res._ShaderHandle = std::shared_ptr<GLuint>(raw_shader_handle, [](const GLuint *ptr) {
-		glDeleteShader(*ptr);
-		delete ptr;
-	});
-
 	switch (_ShaderType) {
 	case ShaderType::VERTEX_SHADER:
-		*res._ShaderHandle = glCreateShader(GL_VERTEX_SHADER);
+		res._ShaderHandle = ResourceManager::instance().alloc(ResourceType::VERTEX_SHADER);
 		break;
 	case ShaderType::FRAGMENT_SHADER:
-		*res._ShaderHandle = glCreateShader(GL_FRAGMENT_SHADER);
+		res._ShaderHandle = ResourceManager::instance().alloc(ResourceType::FRAGMENT_SHADER);
 		break;
 	case ShaderType::COMPUTE_SHADER:
-		*res._ShaderHandle = glCreateShader(GL_COMPUTE_SHADER);
+		res._ShaderHandle = ResourceManager::instance().alloc(ResourceType::COMPUTE_SHADER);
 		break;
 	default:
 		g_logger->warn("Shader::ShaderBuilder ({}): unknown shader type, renderer may not work correctly", _Name);
@@ -92,14 +87,14 @@ Shader Shader::ShaderBuilder::_build() const {
 	}
 
 	const char *const shader_src_cstr = shader_src.c_str();
-	glShaderSource(*res._ShaderHandle, 1, &shader_src_cstr, nullptr);
-	glCompileShader(*res._ShaderHandle);
+	glShaderSource(res._ShaderHandle, 1, &shader_src_cstr, nullptr);
+	glCompileShader(res._ShaderHandle);
 
 	GLint compile_status;
-	glGetShaderiv(*res._ShaderHandle, GL_COMPILE_STATUS, &compile_status);
+	glGetShaderiv(res._ShaderHandle, GL_COMPILE_STATUS, &compile_status);
 	if (compile_status == 0) {
 		static std::array<char, 1024> compile_log;
-		glGetShaderInfoLog(*res._ShaderHandle, sizeof(compile_log), nullptr, compile_log.data());
+		glGetShaderInfoLog(res._ShaderHandle, sizeof(compile_log), nullptr, compile_log.data());
 		g_logger->warn("Shader::ShaderBuilder ({}): shader compilation failed:\n{}", _Name, compile_log.data());
 		return res;
 	}
@@ -112,7 +107,7 @@ Shader Shader::ShaderBuilder::_build() const {
 }
 
 GLuint Shader::_get_handle() const {
-	return *_ShaderHandle;
+	return _ShaderHandle;
 }
 
 }  // namespace gfxutils

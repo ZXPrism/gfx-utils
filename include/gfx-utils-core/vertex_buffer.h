@@ -12,8 +12,8 @@ namespace gfxutils {
 
 class VertexBuffer : public IBuildTarget<VertexBuffer> {
 private:
-	std::shared_ptr<GLuint> _VAO;
-	std::shared_ptr<GLuint> _VBO;
+	GLuint _VAO;
+	GLuint _VBO;
 
 public:
 	class VertexBufferBuilder : public IBuilder<VertexBufferBuilder, VertexBuffer> {

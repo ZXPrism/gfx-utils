@@ -3,7 +3,10 @@ Change logs before 0.4.0 is lost due to an accident 🙃, you can read the commi
 
 ## [0.4.0] - WIP
 ### Added
+- `2025-09-07`: add `ResourceManager` to manage GPU-side resources
 
 ### Fixed
+- `2025-09-07`: relasing GPU-side resources after `glfwTerminate` will cause SIGSEGV
 
 ### Changed
+(empty)

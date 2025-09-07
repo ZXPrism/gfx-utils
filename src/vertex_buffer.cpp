@@ -3,6 +3,7 @@
 #include <numeric>
 
 #include <gfx-utils-core/logger.h>
+#include <gfx-utils-core/resource_manager.h>
 
 namespace gfxutils {
 
@@ -21,22 +22,11 @@ VertexBuffer VertexBuffer::VertexBufferBuilder::_build() const {
 
 	res._set_name(_Name);
 
-	auto *raw_VAO_handle = new GLuint(0);
-	res._VAO = std::shared_ptr<GLuint>(raw_VAO_handle, [](GLuint *ptr) {
-		glDeleteVertexArrays(1, ptr);
-		delete ptr;
-	});
-	glGenVertexArrays(1, res._VAO.get());
-	glBindVertexArray(*res._VAO);
+	res._VAO = ResourceManager::instance().alloc(ResourceType::VAO);
+	glBindVertexArray(res._VAO);
 
-	auto *raw_VBO_handle = new GLuint(0);
-	res._VBO = std::shared_ptr<GLuint>(raw_VBO_handle, [](GLuint *ptr) {
-		glDeleteBuffers(1, ptr);
-		delete ptr;
-	});
-
-	glGenBuffers(1, res._VBO.get());
-	glBindBuffer(GL_ARRAY_BUFFER, *res._VBO);
+	res._VBO = ResourceManager::instance().alloc(ResourceType::VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, res._VBO);
 	glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(_Data.size() * sizeof(float)), _Data.data(), GL_STATIC_DRAW);
 
 	size_t n_attrs = _AttrSizes.size();
@@ -64,7 +54,7 @@ VertexBuffer VertexBuffer::VertexBufferBuilder::_build() const {
 }
 
 void VertexBuffer::use() const {
-	glBindVertexArray(*_VAO);
+	glBindVertexArray(_VAO);
 }
 
 }  // namespace gfxutils

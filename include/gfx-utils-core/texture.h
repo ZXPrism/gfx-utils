@@ -31,7 +31,7 @@ struct TextureInfo {
 class Texture : public IBuildTarget<Texture>,
                 public IExportableResource<Texture> {
 private:
-	std::shared_ptr<GLuint> _TextureHandle;
+	GLuint _TextureHandle;
 	TextureInfo _Info;
 
 public:

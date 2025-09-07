@@ -1,6 +1,7 @@
 #include <gfx-utils-core/texture.h>
 
 #include <gfx-utils-core/logger.h>
+#include <gfx-utils-core/resource_manager.h>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Weverything"
@@ -101,16 +102,11 @@ Texture Texture::TextureBuilder::_build() const {
 
 	res._Info = _Info;
 
-	auto *texture_raw_handle = new GLuint(0);
-	res._TextureHandle = std::shared_ptr<GLuint>(texture_raw_handle, [&](GLuint *ptr) {
-		glDeleteTextures(1, ptr);
-		delete ptr;
-	});
+	res._TextureHandle = ResourceManager::instance().alloc(ResourceType::TEXTURE);
 
 	const uint8_t *data_ptr = (_IsDataSet ? _Data.data() : nullptr);
 
-	glGenTextures(1, res._TextureHandle.get());
-	glBindTexture(GL_TEXTURE_2D, *res._TextureHandle);
+	glBindTexture(GL_TEXTURE_2D, res._TextureHandle);
 	glTexImage2D(GL_TEXTURE_2D,
 	             0,
 	             _Info._InternalFormat,
@@ -134,17 +130,17 @@ Texture Texture::TextureBuilder::_build() const {
 
 void Texture::use(size_t texture_unit) const {
 	glActiveTexture(static_cast<GLenum>(GL_TEXTURE0 + texture_unit));
-	glBindTexture(GL_TEXTURE_2D, *_TextureHandle);
+	glBindTexture(GL_TEXTURE_2D, _TextureHandle);
 }
 
 GLuint Texture::_get_handle() const {
-	return *_TextureHandle;
+	return _TextureHandle;
 }
 
 void Texture::_export_to_file(const std::string &file_path [[maybe_unused]]) const {
 	std::vector<uint8_t> data(_Info._Width * _Info._Height * 4);
 
-	glBindTexture(GL_TEXTURE_2D, *_TextureHandle);
+	glBindTexture(GL_TEXTURE_2D, _TextureHandle);
 	glGetTexImage(GL_TEXTURE_2D, 0, _Info._CPUFormat, _Info._CPUCompType, data.data());
 
 	stbi_flip_vertically_on_write(1);

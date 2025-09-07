@@ -18,7 +18,7 @@ namespace gfxutils {
 
 class ShaderProgram : public IBuildTarget<ShaderProgram> {
 private:
-	std::shared_ptr<GLuint> _Program;
+	GLuint _Program;
 	std::unordered_map<std::string, GLint> _MapUniformNameToLocation;
 	std::vector<UniformInfo> _UniformInfoVec;
 

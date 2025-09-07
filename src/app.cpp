@@ -1,5 +1,8 @@
 #include <gfx-utils-core/app.h>
 
+#include <gfx-utils-core/logger.h>
+#include <gfx-utils-core/resource_manager.h>
+
 #include <chrono>
 #include <format>
 
@@ -10,8 +13,6 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
-
-#include <gfx-utils-core/logger.h>
 
 namespace gfxutils {
 
@@ -230,6 +231,7 @@ void App::_init_IMGUI_styles() {
 }
 
 void App::_shutdown_window() {
+	ResourceManager::instance().free();
 	glfwDestroyWindow(_Window);
 	glfwTerminate();
 }

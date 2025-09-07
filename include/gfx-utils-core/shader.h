@@ -12,7 +12,7 @@ namespace gfxutils {
 
 class Shader : public IBuildTarget<Shader> {
 private:
-	std::shared_ptr<GLuint> _ShaderHandle;
+	GLuint _ShaderHandle;
 
 public:
 	class ShaderBuilder : public IBuilder<ShaderBuilder, Shader> {

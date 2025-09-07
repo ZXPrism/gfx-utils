@@ -13,7 +13,7 @@ namespace gfxutils {
 
 class StorageBuffer : public IBuildTarget<StorageBuffer> {
 private:
-	std::shared_ptr<GLuint> _StorageBufferHandle;
+	GLuint _StorageBufferHandle;
 	size_t _BufferSizeBytes;
 
 public:
@@ -30,7 +30,7 @@ public:
 	};
 
 	void bind(size_t binding_point) const;
-	void set_data(const uint8_t *data, size_t n_bytes);
+	void set_data(const uint8_t *data, size_t n_bytes) const;
 };
 
 }  // namespace gfxutils
