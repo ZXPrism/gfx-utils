@@ -20,6 +20,8 @@ target("gfx-utils-core")
         add_cxflags("/utf-8", {force = true})
         add_cxxflags("/utf-8", {force = true})
         add_cxxflags("/wd4068", {force = true}) -- for #pragma clang
+    elseif is_plat("linux") then
+        add_cxxflags("-Wno-unknown-pragmas", {force = true}) -- for #pragma clang
     end
 target_end()
 
@@ -40,7 +42,9 @@ function add_example(example_name, extra_pkgs)
         if is_plat("windows") then
             add_cxflags("/utf-8", {force = true})
             add_cxxflags("/utf-8", {force = true})
-            add_cxxflags("/wd4068", {force = true})
+            add_cxxflags("/wd4068", {force = true}) -- for #pragma clang
+        elseif is_plat("linux") then
+            add_cxxflags("-Wno-unknown-pragmas", {force = true}) -- for #pragma clang
         end
 
         after_build(function (target)
