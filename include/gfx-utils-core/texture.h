@@ -25,6 +25,7 @@ struct TextureInfo {
 	GLenum _InternalFormat;
 	GLenum _CPUFormat;
 	GLenum _CPUCompType;
+	GLint _Filter;
 };
 
 class Texture : public IBuildTarget<Texture>,
@@ -40,6 +41,7 @@ public:
 		bool _IsSizeSet = false;
 		bool _IsDataSet = false;
 		bool _IsFormatSet = false;
+		bool _IsFilterSet = false;
 
 		TextureInfo _Info;
 
@@ -48,6 +50,7 @@ public:
 
 		TextureBuilder &set_size(size_t width, size_t height);
 		TextureBuilder &set_format(GLenum internal_format, GLenum cpu_format = GL_RGBA, GLenum cpu_comp_type = GL_UNSIGNED_BYTE);
+		TextureBuilder &set_filter(GLint filter);
 		TextureBuilder &set_data(const std::vector<uint8_t> &data);
 		TextureBuilder &set_data_from_file(const std::string &file_path);
 

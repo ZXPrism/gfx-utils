@@ -60,14 +60,17 @@ int main() {
 	auto color_r = Texture::TextureBuilder("color_r")
 	                   .set_size(WINDOW_WIDTH, WINDOW_HEIGHT)
 	                   .set_format(GL_RGBA32F)
+	                   .set_filter(GL_NEAREST)
 	                   .build();
 	auto color_g = Texture::TextureBuilder("color_g")
 	                   .set_size(WINDOW_WIDTH, WINDOW_HEIGHT)
 	                   .set_format(GL_RGBA32F)
+	                   .set_filter(GL_NEAREST)
 	                   .build();
 	auto color_b = Texture::TextureBuilder("color_b")
 	                   .set_size(WINDOW_WIDTH, WINDOW_HEIGHT)
 	                   .set_format(GL_RGBA32F)
+	                   .set_filter(GL_NEAREST)
 	                   .build();
 
 	// prepare render passes

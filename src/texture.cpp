@@ -31,6 +31,12 @@ Texture::TextureBuilder &Texture::TextureBuilder::set_format(GLenum internal_for
 	return *this;
 }
 
+Texture::TextureBuilder &Texture::TextureBuilder::set_filter(GLint filter) {
+	_Info._Filter = filter;
+	_IsFilterSet = true;
+	return *this;
+}
+
 Texture::TextureBuilder &Texture::TextureBuilder::set_data(const std::vector<uint8_t> &data) {
 	if (_IsSizeSet && data.size() == _Info._Width * _Info._Height) {
 		_Data = data;
@@ -88,6 +94,11 @@ Texture Texture::TextureBuilder::_build() const {
 		return res;
 	}
 
+	if (!_IsFilterSet) {
+		g_logger->warn("Texture ({}): texture filter is not set: texture won't be built", _Name);
+		return res;
+	}
+
 	res._Info = _Info;
 
 	auto *texture_raw_handle = new GLuint(0);
@@ -109,8 +120,8 @@ Texture Texture::TextureBuilder::_build() const {
 	             _Info._CPUFormat,
 	             _Info._CPUCompType,
 	             data_ptr);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, _Info._Filter);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, _Info._Filter);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 

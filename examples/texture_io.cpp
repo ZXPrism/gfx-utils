@@ -64,10 +64,12 @@ int main() {
 	auto input_texture = Texture::TextureBuilder("input_texture")
 	                         .set_data_from_file("assets/texture_io/image.png")
 	                         .set_format(GL_SRGB8_ALPHA8)
+	                         .set_filter(GL_LINEAR)
 	                         .build();
 	auto albedo = Texture::TextureBuilder("albedo")
 	                  .set_size(WINDOW_WIDTH, WINDOW_HEIGHT)
 	                  .set_format(GL_SRGB8_ALPHA8)
+	                  .set_filter(GL_LINEAR)
 	                  .build();
 
 	// prepare render passes

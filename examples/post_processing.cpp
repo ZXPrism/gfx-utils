@@ -15,8 +15,8 @@
 #include <fstream>
 #include <unordered_set>
 
-constexpr int WINDOW_WIDTH = 800;
-constexpr int WINDOW_HEIGHT = 600;
+constexpr int WINDOW_WIDTH = 1920;
+constexpr int WINDOW_HEIGHT = 1080;
 constexpr const char *WINDOW_TITLE = "Example: post_processing";
 constexpr const char *CONFIG_FILE_PATH = "assets/post_processing/config.json";
 constexpr const char *SHADER_ROOT_PATH = "assets/post_processing/shader";
@@ -127,6 +127,7 @@ int main() {
 				auto render_target = Texture::TextureBuilder(std::format("{}/color", pass_name))
 				                         .set_size(WINDOW_WIDTH, WINDOW_HEIGHT)
 				                         .set_format(GL_RGBA32F)
+				                         .set_filter(GL_NEAREST)
 				                         .build();
 				auto render_pass = RenderPass::RenderPassBuilder(pass_name)
 				                       .add_color_attachment(render_target, false)
@@ -193,6 +194,7 @@ int main() {
 				auto texture = Texture::TextureBuilder(image_path.stem().string())
 				                   .set_data_from_file(image_path.string())
 				                   .set_format(GL_RGBA32F)  // here we assume the input image is all in linear color space (for now)
+				                   .set_filter(GL_NEAREST)
 				                   .build();
 				input_texture_vec.push_back(texture);
 				input_texture_names.push_back(image_path.filename().string());
