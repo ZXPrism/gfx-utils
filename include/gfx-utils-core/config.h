@@ -4,7 +4,7 @@
 
 namespace gfxutils::config {
 
-constexpr const char *version [[maybe_unused]] = "gfx-utils v0.2";
+constexpr const char *version [[maybe_unused]] = "gfx-utils v0.3.0";
 
 constexpr int opengl_ver_major [[maybe_unused]] = 4;
 constexpr int opengl_ver_minor [[maybe_unused]] = 6;
