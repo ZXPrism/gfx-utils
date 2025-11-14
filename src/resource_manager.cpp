@@ -72,7 +72,7 @@ void ResourceManager::free() {
 	}
 	for (const auto &[handle, callback] : _TextureList) {
 		callback();
-		glad_glDeleteTextures(1, &handle);
+		glDeleteTextures(1, &handle);
 	}
 	for (const auto &[handle, callback] : _ShaderList) {
 		callback();

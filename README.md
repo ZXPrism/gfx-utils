@@ -15,7 +15,6 @@ Simple graphics utils based on OpenGL for my own gfx experiments (also for yours
 - [texture io](./examples/texture_io.cpp)
 - [multiple render targets (mrt)](./examples/mrt.cpp)
 - [compute shaders](./examples/compute.cpp)
-- [post processing](./examples/post_processing.cpp)
 
 ### Development & Contribute
 <!-- It's recommended to use VSCode.
